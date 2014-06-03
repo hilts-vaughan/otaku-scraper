@@ -97,8 +97,12 @@ var Anime = (function() {
         var status = "Status:";
         anime.status = $(".dark_text:contains('Status:')").parent().text().substring(status.length + 1);
 
+        anime.genres = []
+
         var genres = "Genres:";
-        anime.genres = $(".dark_text:contains('Genres:')").parent().text().substring(genres.length + 4);        
+        var englishGenres = $(".dark_text:contains('Genres:')").parent().text().substring(genres.length + 4).split(",");        
+        for(var genre in englishGenres)
+            anime.genres.push(englishGenres[genre].trim());
 
         var rating = "Rating:";
         anime.rating =  $(".dark_text:contains('Rating:')").parent().text().substring(rating.length + 4);
