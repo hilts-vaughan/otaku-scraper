@@ -1,0 +1,43 @@
+{
+  "name": "node-myanimelist-api",
+  "description": "Unofficial API for myanimelist.net. http://mal-api.com",
+  "version": "0.1.0",
+  "author": "Cheah Chu Yeow <chuyeow@gmail.com>",
+  "contributors": [
+    {
+      "name": "Vaughan Hilts",
+      "email": "someone@domain.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chuyeow/node-myanimelist-api.git"
+  },
+  "dependencies": {
+    "cheerio": "0.16.0",
+    "express": "3.4.2",
+    "nconf": "0.6.7",
+    "request": "2.27.0",
+    "mongodb": "*",
+    "monk": "*"
+  },
+  "devDependencies": {
+    "debug": "0.7.2",
+    "grunt": "0.4.1",
+    "grunt-contrib-watch": "0.5.3",
+    "grunt-mocha-test": "0.7.0",
+    "mocha": "1.13.0",
+    "should": "2.0.1",
+    "sinon": "1.7.3",
+    "supertest": "0.8.0",
+    "xml2js": "^0.4.4"
+  },
+  "scripts": {
+    "start": "node --harmony-generators app.js",
+    "test": "make test",
+    "test-watch": "make test-watch"
+  },
+  "engines": {
+    "node": ">=0.11.7"
+  }
+}
