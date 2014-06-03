@@ -43,6 +43,7 @@ var Anime = (function() {
 
     });
 
+  };
 
     /*
       This method is really fragile; it's subject to page layout changes.
@@ -116,8 +117,23 @@ var Anime = (function() {
 
         return anime;
     };
+  
+    Anime.lookup = function(name, callback, db)
+    {
 
-  };
+        var that = this;
+        request({
+          url: 'http://myanimelist.net/anime.php?q='+escape(name),
+          headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
+          timeout: 3000
+        }, function(err, response, body) {
+            if (err) {            
+                return callback(err);
+            }
+
+            callback(response);//that.byId(id, callback, db);
+        });
+    };
 
   // export our class
   return Anime;
