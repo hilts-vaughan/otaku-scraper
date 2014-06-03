@@ -1,12 +1,11 @@
 var cheerio = require('cheerio')
-  , request = require('request');
+  , request = require('request')
+  ;
 
 var Anime = (function() {
-  
   function Anime() {}
 
   Anime.byId = function(id, callback, db) {
-    
 
     var that = this;
     db.get('anime').findOne({"mal_id": id}, function(err, document) {
@@ -17,12 +16,11 @@ var Anime = (function() {
       console.log('fetch');
       callback(null, JSON.stringify(document) )
       }
-    
+
       // Otherwise, we can try to parse
       else
       {
 
-    
         request({
           url: 'http://myanimelist.net/anime/'+id,
           headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
@@ -35,30 +33,25 @@ var Anime = (function() {
           var animeObject = that.tryParse(body);
           animeObject['mal_id'] = id;
 
-
           // Insert this anime record
           db.get('anime').insert(animeObject);
 
           callback(null, animeObject);
         });
 
-
       } // end else
 
-
     });
-
 
 
     /*
       This method is really fragile; it's subject to page layout changes.
       We should do our best to keep up with breakages
     */
-
     Anime.tryParse = function(html)
     {
         var $ = cheerio.load(html);
-        var anime = {}
+        var anime = {};
 
         // Extract the name from our DOM
         var name = $('h1').first().contents().filter(function() {
@@ -69,7 +62,28 @@ var Anime = (function() {
 
         // Set the expirty to 7 days; this is how often we evict anime entries from our cache
         var now = new Date();
-        anime.expiry = now.setDate(now.getDate() + 7);                
+        anime.expiry = now.setDate(now.getDate() + 7);
+
+        // Grab Alternative Titles (English, Synonyms, Japanese)
+        anime.titles = {};
+        anime.titles.english = [];
+        anime.titles.synonyms = [];
+        anime.titles.japanese = [];
+
+        var altEnglish = "English:";
+        var englishTitles = $(".dark_text:contains('English:')").parent().text().substring(altEnglish.length + 1).split(",");
+        for (var title in englishTitles)
+            anime.titles.english.push(englishTitles[title].trim());
+
+        var altSynonyms = "Synonyms:";
+        var synonymTitles = $(".dark_text:contains('Synonyms:')").parent().text().substring(altSynonyms.length + 1).split(",");
+        for (var title in synonymTitles)
+            anime.titles.synonyms.push(synonymTitles[title].trim());
+
+        var altJapanese = "Japanese:";
+        var japaneseTitles = $(".dark_text:contains('Japanese:')").parent().text().substring(altJapanese.length + 1).split(",");
+        for (var title in japaneseTitles)
+            anime.titles.japanese.push(japaneseTitles[title].trim());
 
         // Get the poster
         anime.poster = $('.borderClass img').attr('src');
@@ -100,15 +114,10 @@ var Anime = (function() {
         anime.episodes =  $(".dark_text:contains('Episodes:')").parent().text().substring(episodes.length + 1).replace(/(\r\n|\n|\r|\t)/gm,"");        
 
 
-
         return anime;
     };
 
-
   };
-
-
-
 
   // export our class
   return Anime;
