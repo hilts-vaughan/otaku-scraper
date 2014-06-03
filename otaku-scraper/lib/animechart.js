@@ -1,25 +1,43 @@
 var cheerio = require('cheerio')
   , request = require('request')
+  , Anime = require('./anime.js')
   ;
 
 var AnimeChart = (function() {
   function AnimeChart() {}
 
-  AnimeChart.fetch = function(callback) {
+  AnimeChart.fetch = function(callback, db) {
 
     var that = this;
     request({
           url: 'http://anichart.net/',
           headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
-          timeout: 3000
+          timeout: 5000
         }, function(err, response, body) {
           if (err) {            
             return callback(err);
           }
-          
-          callback(null, that.tryParse(body));
 
-          
+          var chart = that.tryParse(body);
+
+          var returns = 0;
+          var callbacks = [];
+          for (var i = 0; i < chart.info.length; i++) {
+            callbacks[i] = (function(index) {
+                return function(err, lookup) {
+                    returns++;
+                    chart.info[index].mal_id = err ? -3 : lookup.mal_id;
+                    chart.info[index].lookuperr = err;
+
+                    if (returns == chart.info.length) {
+                        callback(null, chart);
+                    }
+                };
+            })(i);
+
+            Anime.lookup(chart.info[i].title, callbacks[i], db);
+          }
+
         });
 
   };
@@ -44,8 +62,49 @@ var AnimeChart = (function() {
             : $(".type_title:contains('TV - ')").text().substring(typeTitle.length + 1)
             ).toLowerCase();
 
-        var animeInfo = $(".anime_info").text();
-        chart.info = animeInfo;
+        chart.info = [];
+        
+        var itrInfo = $(".anime_info");
+        while (itrInfo.next().length > 0) {
+            var entry = itrInfo.first();
+            var contents = entry.contents();
+            var tabinfo = contents.filter(".tabs").contents().filter(".tab_info").contents();
+            var info = {};
+
+            info.title = contents.filter(".title").text();
+
+            var source = "Source";
+            info.source = tabinfo.filter(".info_box:contains('" + source + "')").text().substring(source.length + 1).trim();
+
+            var director = "Director";
+            info.director = tabinfo.filter(".info_box:contains('" + director + "')").text().substring(director.length + 1).trim();
+
+            var seriesComp = "Series Comp";
+            info.seriesComp = tabinfo.filter(".info_box:contains('" + seriesComp + "')").text().substring(seriesComp.length + 1).trim();
+
+            var charDesign = "Char Design";
+            info.charDesign = tabinfo.filter(".info_box:contains('" + charDesign + "')").text().substring(charDesign.length + 1).trim();
+
+            var music = "Music";
+            info.music = tabinfo.filter(".info_box:contains('" + music + "')").text().substring(music.length + 1).trim();
+
+            var episodes = "Episodes";
+            var nEpisodes = new Number(tabinfo.filter(".info_box:contains('" + episodes + "')").text().substring(episodes.length + 1).trim());
+            if (isNaN(nEpisodes))
+                nEpisodes = -1;
+            info.episodes = nEpisodes;
+
+            var nobox = tabinfo.filter(".info_nobox:contains('" + twitter + "')").text().trim();
+            var twitter = "Twitter:";
+            var premiere = "Premiere Date:";
+
+            info.twitter = nobox.substring(nobox.indexOf(twitter) + twitter.length, nobox.indexOf(premiere)).trim();
+            info.premiere = nobox.substring(nobox.indexOf(premiere) + premiere.length).trim();
+
+            chart.info.push(info);
+
+            itrInfo = itrInfo.next();
+        }
 
         return chart;
     };
