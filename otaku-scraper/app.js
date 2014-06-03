@@ -23,57 +23,65 @@ app.use(function(req,res,next){
     next();
 });
 
+var mal = {
+    anime: {
+        id: function(req, res, next) {
+            res.type('application/json');
 
-app.get('/v2/anime/id/:id', function(req, res, next) {
-  res.type('application/json');
+            var db = req.db;
+            var id = req.params.id;
 
-  var db = req.db;
-  var id = req.params.id;
-  if (!/^\d+$/.test(id)) {
-    return res.send(404, { 'error': 'not-found' });
-  }
+            Anime.byId(id, function(err, anime) {
+                if (err) {
+                    return next(err);
+                }
+                
+                res.send(anime);
+            }, db);
+        },
+        name: function(req, res, next) {
+            res.type('application/json');
 
-  Anime.byId(id, function(err, anime) {
-    if (err) return next(err);
-    res.send(anime);
-  }, db);
-});
+            var db = req.db;
+            var name = req.params.name;
 
-app.get('/v2/anime/name/:name', function(req, res, next) {
-  res.type('application/json');
+            Anime.lookup(name, function(err, anime) {
+                if (err) {
+                    return next(err);
+                }
 
-  var db = req.db;
-  var name = req.params.name;
+                res.send(anime);
+            }, db);
+        }
+    },
+    news: function(req, res, next) {
+        res.type('application/json');
+        
+        News.fetch(function(err, news) {
+            res.send(news);
+        });
+    }
+};
 
-  Anime.lookup(name, function(err, anime) {
-    if (err) return next(err);
-    res.send(anime);
-  }, db);
-});
-
-
-app.get('/v2/news/', function(req, res, next)
-{
-    res.type('application/json');
-    
-    News.fetch(function(err, news)
-    {
-        res.send(news);
-    });
-
-
-});
-
-app.get('/v2/animechart/', function(req, res, next) {
+var anichart = function(req, res, next) {
     res.type('application/json');
 
     var db = req.db;
 
-    AnimeChart.fetch(function(err, chart)
-    {
+    AnimeChart.fetch(function(err, chart) {
         res.send(chart)
     }, db);
-});
+};
+
+app.get('/v2/mal/anime/id/:id([0-9]+)', mal.anime.id);
+app.get('/v2/mal/anime/name/:name', mal.anime.name);
+app.get('/v2/mal/news/', mal.news);
+app.get('/mal/anime/id/:id([0-9]+)', mal.anime.id);
+app.get('/mal/anime/name/:name', mal.anime.name);
+app.get('/mal/news/', mal.news);
+
+app.get('/v2/anichart/', anichart);
+app.get('/anichart/', anichart);
 
 app.use(notfound());
 

@@ -1,5 +1,6 @@
-var parseString = require('xml2js').parseString;
-var request = require('request');
+var parseString = require('xml2js').parseString
+    , request = require('request')
+    ;
 
 var News = (function() {
   
