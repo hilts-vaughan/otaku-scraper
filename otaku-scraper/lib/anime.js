@@ -123,7 +123,7 @@ var Anime = (function() {
         var that = this;
 
         request({
-            url: 'http://myanimelist.net/anime.php?'+params+'&q='+encodeURIComponent(name.replace(/[\~\&\:\;\!\.\*\+\-]/g, "")),
+            url: 'http://myanimelist.net/anime.php?'+params+'&q='+encodeURIComponent(name.replace(/[\~\&\:\;\!\.\*]/g, "")),
             headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
             timeout: 10000
         }, function(err, response, body) {
