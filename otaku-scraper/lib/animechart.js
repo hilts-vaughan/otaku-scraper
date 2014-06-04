@@ -61,9 +61,8 @@ var AnimeChart = (function() {
 
         chart.info = [];
         var itrInfo = $(".anime_info");
-        while (itrInfo.next().length > 0) {
-            var entry = itrInfo.first();
-            var contents = entry.contents();
+        while (itrInfo.length > 0) {
+            var contents = itrInfo.first().contents();
             var tabinfo = contents.filter(".tabs").contents().filter(".tab_info").contents();
             var info = {};
 
