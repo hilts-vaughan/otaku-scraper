@@ -3,60 +3,54 @@ var cheerio = require('cheerio')
   ;
 
 var Anime = (function() {
-  function Anime() {}
+    function Anime() {}
 
-  Anime.byId = function(id, callback, db) {
+    Anime.byId = function(id, callback, db) {
+        var that = this;
+        db.get('anime').findOne({"mal_id": id}, function(err, document) {
+            // Feed from cache if we can
+            if(!err && document != null) {
+                console.log('fetch');
+                callback(null, JSON.stringify(document));
+            }
 
-    var that = this;
-    db.get('anime').findOne({"mal_id": id}, function(err, document) {
+            // Otherwise, we can try to parse
+            else {
+                request({
+                    url: 'http://myanimelist.net/anime/'+id,
+                    headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
+                    timeout: 3000
+                }, function(err, response, body) {
+                    if (err) {            
+                        return callback(err);
+                    }
 
-      // Feed from cache if we can
-      if(!err && document != null)
-      {
-      console.log('fetch');
-      callback(null, JSON.stringify(document) )
-      }
+                    var animeObject = that.tryParse(body);
+                    animeObject['mal_id'] = id;
 
-      // Otherwise, we can try to parse
-      else
-      {
+                    // Insert this anime record
+                    db.get('anime').insert(animeObject);
 
-        request({
-          url: 'http://myanimelist.net/anime/'+id,
-          headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
-          timeout: 3000
-        }, function(err, response, body) {
-          if (err) {            
-            return callback(err);
-          }
+                    callback(null, animeObject);
+                });
 
-          var animeObject = that.tryParse(body);
-          animeObject['mal_id'] = id;
+            } // end else
 
-          // Insert this anime record
-          db.get('anime').insert(animeObject);
-
-          callback(null, animeObject);
         });
 
-      } // end else
-
-    });
-
-  };
+    };
 
     /*
       This method is really fragile; it's subject to page layout changes.
       We should do our best to keep up with breakages
     */
-    Anime.tryParse = function(html)
-    {
+    Anime.tryParse = function(html) {
         var $ = cheerio.load(html);
         var anime = {};
 
         // Extract the name from our DOM
         var name = $('h1').first().contents().filter(function() {
-          return this.type !== 'tag';
+            return this.type !== 'tag';
         }).text();
 
         anime.name = name;
@@ -88,6 +82,7 @@ var Anime = (function() {
 
         // Get the poster
         anime.poster = $('.borderClass img').attr('src');
+
         // Get the summary of the show
         anime.synopsis = $("h2:contains('Synopsis')").parent().text().substring(8);
 
@@ -112,24 +107,22 @@ var Anime = (function() {
         anime.rank =  $(".dark_text:contains('Ranked:')").parent().text().substring(rank.length + 2);
 
         anime.score =  $(".dark_text:contains('Score:')").parent().first().contents().filter(function() {
-          return this.type !== 'tag';
+            return this.type !== 'tag';
         }).text().trim();
 
         var episodes = "Episodes:";
         anime.episodes =  $(".dark_text:contains('Episodes:')").parent().text().substring(episodes.length + 1).replace(/(\r\n|\n|\r|\t)/gm,"");        
 
-
         return anime;
     };
-  
-    Anime.lookup = function(name, callback, db)
-    {
 
+    Anime.lookup = function(name, callback, db) {
         var that = this;
+
         request({
-          url: 'http://myanimelist.net/anime.php?type=1&q='+escape(name),
-          headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
-          timeout: 10000
+            url: 'http://myanimelist.net/anime.php?type=1&q='+escape(name),
+            headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
+            timeout: 10000
         }, function(err, response, body) {
             if (err) {            
                 return callback(err);
@@ -160,11 +153,11 @@ var Anime = (function() {
         });
     };
 
-  // export our class
-  return Anime;
+    // export our class
+    return Anime;
 })();
 
 // Export the module
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = Anime;
+    module.exports = Anime;
 }
