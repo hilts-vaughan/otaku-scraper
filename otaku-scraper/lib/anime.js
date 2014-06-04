@@ -120,7 +120,7 @@ var Anime = (function() {
         var that = this;
 
         request({
-            url: 'http://myanimelist.net/anime.php?type=1&q='+escape(name),
+            url: 'http://myanimelist.net/anime.php?type=1&q='+encodeURIComponent(name.replace(/[\~\&\:\;\!\.\*\+\-]/g, "")),
             headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
             timeout: 10000
         }, function(err, response, body) {
@@ -133,6 +133,7 @@ var Anime = (function() {
             var mal_id = -1;
 
             if (isresults) {
+                if (name.indexOf("Gakumon") >= 0) mal_id = body;
                 if (body.indexOf("No titles that matched your query were found.") == -1) {
                     var atag = $("a:contains('" + name.toLowerCase() + "')");
                     var href = atag.attr("href");
@@ -145,9 +146,9 @@ var Anime = (function() {
                 mal_id = body.substring(idxDoEdit, body.indexOf(");", idxDoEdit));
             }
 
-            mal_id = new Number(mal_id);
-            if (isNaN(mal_id))
-                mal_id = -2;
+            //mal_id = new Number(mal_id);
+            //if (isNaN(mal_id))
+                //mal_id = -2;
 
             callback(null, { "mal_id": mal_id });//that.byId(id, callback, db);
         });

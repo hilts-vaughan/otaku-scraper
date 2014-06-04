@@ -68,6 +68,7 @@ var AnimeChart = (function() {
             var info = {};
 
             info.title = contents.filter(".title").text();
+            if (info.title.indexOf("Fuun") > -1) info.title = info.title.replace("Fuun", "Fuuun");
 
             var source = "Source";
             info.source = tabinfo.filter(".info_box:contains('" + source + "')").text().substring(source.length + 1).trim();
