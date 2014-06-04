@@ -3,7 +3,7 @@ var express = require('express')
   , Anime = require('./lib/anime')
   , notfound = require('./lib/notfound')
   , AnimeChart = require('./lib/animechart')
-  . News = require('./lib/news')
+  , News = require('./lib/news')
   ;
 
 var mongo = require('mongodb');
