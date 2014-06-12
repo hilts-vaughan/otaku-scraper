@@ -10,7 +10,7 @@ var AnimeChart = (function() {
 
         var that = this;
         request({
-            url: 'http://anichart.net/',
+            url: 'http://anichart.net/summer',
             headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
             timeout: 5000
         }, function(err, response, body) {
@@ -89,6 +89,8 @@ var AnimeChart = (function() {
             if (isNaN(nEpisodes))
                 nEpisodes = -1;
             info.episodes = nEpisodes;
+
+            info.poster = $(contents).find(".thumb").attr('src');
 
             var nobox = tabinfo.filter(".info_nobox:contains('" + twitter + "')").text().trim();
             var twitter = "Twitter:";
