@@ -1,14 +1,21 @@
-var express = require('express')
+global.api = {
+    anichart: {},
+    ann: {},
+    mal: {},
+};
+
+var api = global.api
+  , express = require('express')
   , config = require('./config')
-  , Anime = require('./lib/anime')
+  , Anime = require('./lib/api/mal/anime')
   , notfound = require('./lib/notfound')
-  , AnimeChart = require('./lib/animechart')
-  , News = require('./lib/news')
+  , AniChart = require('./lib/api/anichart/anichart')
+  , News = require('./lib/api/mal/news')
   ;
 
 var mongo = require('mongodb');
 var monk = require('monk');
-var db = monk('localhost:27017/otaku');
+var db = monk('localhost/otaku');
 
 var app = express();
 if ('test' !== app.get('env')) app.use(express.logger(config.get('logger:format')));
@@ -22,72 +29,32 @@ app.use(function(req, res, next) {
     next();
 });
 
-var api = {};
-
-api.mal = {
-    anime: {
-        id: function(req, res, next) {
-            res.type('application/json');
-
-            var db = req.db;
-            var id = req.params.id;
-
-            Anime.byId(id, function(err, anime) {
-                if (err) {
-                    return next(err);
-                }
-                
-                res.send(anime);
-            }, db);
-        },
-        name: function(req, res, next) {
-            res.type('application/json');
-
-            var db = req.db;
-            var name = req.params.name;
-
-            Anime.lookup(name, function(err, anime) {
-                if (err) {
-                    return next(err);
-                }
-
-                res.send(anime);
-            }, db);
-        }
-    },
-    news: function(req, res, next) {
-        res.type('application/json');
-        
-        News.fetch(function(err, news) {
-            res.send(news);
-        });
-    }
-};
-
-api.anichart = function(req, res, next) {
-    res.type('application/json');
-
-    var db = req.db;
-
-    AnimeChart.fetch(function(err, chart) {
-        res.send(chart)
-    }, db);
-};
-
-app.get('/v1/mal/anime/id/:id([0-9]+)', api.mal.anime.id);
-app.get('/v1/mal/anime/name/:name', api.mal.anime.name);
-app.get('/v1/mal/news/', api.mal.news);
-app.get('/v1/anichart/', api.anichart);
-
-app.get('/mal/anime/id/:id([0-9]+)', api.mal.anime.id);
-app.get('/mal/anime/name/:name', api.mal.anime.name);
-app.get('/mal/news/', api.mal.news);
-app.get('/anichart/', api.anichart);
+apiRegister('/mal/anime/id/:id([0-9]+)', api.mal.anime.id);
+apiRegister('/mal/anime/name/:name', api.mal.anime.name);
+apiRegister('/mal/news/', api.mal.news);
+apiRegister('/anichart', api.anichart.current);
+apiRegister('/anichart/current', api.anichart.current);
+apiRegister('/anichart/spring', api.anichart.spring);
+apiRegister('/anichart/summer', api.anichart.summer);
+apiRegister('/anichart/fall', api.anichart.fall);
+apiRegister('/anichart/winter', api.anichart.winter);
+apiRegister('/anichart/spring/:id([0-9]+)', api.anichart.spring);
+apiRegister('/anichart/summer/:id([0-9]+)', api.anichart.summer);
+apiRegister('/anichart/fall/:id([0-9]+)', api.anichart.fall);
+apiRegister('/anichart/winter/:id([0-9]+)', api.anichart.winter);
 
 app.use(notfound());
 
 app.listen(config.get('port'), function() {
     console.log('API server listening on port ' + config.get('port'));
 });
+
+function apiRegister(url, func, version) {
+    if (isNaN(version))
+        version = 1;
+
+    app.get(url, func);
+    app.get('/v' + version + url, func);
+}
 
 module.exports = app;

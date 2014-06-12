@@ -1,12 +1,37 @@
-var cheerio = require('cheerio')
+var api = global.api
+  , cheerio = require('cheerio')
   , request = require('request')
-  , Anime = require('./anime.js')
+  , Anime = require('../mal/anime.js')
   ;
 
-var AnimeChart = (function() {
-    function AnimeChart() {}
+api.anichart = {
+    current: function(req, res, next) {
+        res.type('application/json');
 
-    AnimeChart.fetch = function(callback, db) {
+        var db = req.db;
+
+        AniChart.fetch(function(err, chart) {
+            res.send(chart)
+        }, db);
+    },
+    spring: function(req, res, next) {
+        
+    },
+    summer: function(req, res, next) {
+        
+    },
+    fall: function(req, res, next) {
+        
+    },
+    winter: function(req, res, next) {
+        
+    }
+};
+
+var AniChart = (function() {
+    function AniChart() {}
+
+    AniChart.fetch = function(callback, db) {
 
         var that = this;
         request({
@@ -44,7 +69,7 @@ var AnimeChart = (function() {
       This method is really fragile; it's subject to page layout changes.
       We should do our best to keep up with breakages
     */
-    AnimeChart.tryParse = function(html) {
+    AniChart.tryParse = function(html) {
         var $ = cheerio.load(html);
         var chart = {};
 
@@ -106,10 +131,10 @@ var AnimeChart = (function() {
     };
 
     // export our class
-    return AnimeChart;
+    return AniChart;
 })();
 
 // Export the module
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AnimeChart;
+    module.exports = AniChart;
 }

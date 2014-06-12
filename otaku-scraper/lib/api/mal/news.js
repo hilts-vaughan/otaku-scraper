@@ -1,6 +1,15 @@
-var parseString = require('xml2js').parseString
+var api = global.api
+  , parseString = require('xml2js').parseString
   , request = require('request')
   ;
+
+api.mal.news = function(req, res, next) {
+    res.type('application/json');
+
+    News.fetch(function(err, news) {
+        res.send(news);
+    });
+};
 
 var News = (function() {
     function News() {}

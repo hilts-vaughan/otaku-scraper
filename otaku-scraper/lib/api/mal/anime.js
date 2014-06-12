@@ -1,6 +1,38 @@
-var cheerio = require('cheerio')
+var api = global.api
+  , cheerio = require('cheerio')
   , request = require('request')
   ;
+
+api.mal.anime = {
+    id: function(req, res, next) {
+        res.type('application/json');
+
+        var db = req.db;
+        var id = req.params.id;
+
+        Anime.byId(id, function(err, anime) {
+            if (err) {
+                return next(err);
+            }
+
+            res.send(anime);
+        }, db);
+    },
+    name: function(req, res, next) {
+        res.type('application/json');
+
+        var db = req.db;
+        var name = req.params.name;
+
+        Anime.lookup(name, function(err, anime) {
+            if (err) {
+                return next(err);
+            }
+
+            res.send(anime);
+        }, db);
+    }
+};
 
 var Anime = (function() {
     function Anime() {}
@@ -11,7 +43,7 @@ var Anime = (function() {
             // Feed from cache if we can
             if(!err && document != null) {
                 console.log('fetch');
-                callback(null, JSON.stringify(document));
+                callback(null, JSON.stringify(document, null, 2));
             }
 
             // Otherwise, we can try to parse
@@ -28,8 +60,9 @@ var Anime = (function() {
                     var animeObject = that.tryParse(body);
                     animeObject['mal_id'] = id;
 
-                    // Insert this anime record
-                    db.get('anime').insert(animeObject);
+                    /* Insert the record iff it's not an invalid request */
+                    if (animeObject['name'] != "Invalid Request")
+                        db.get('anime').insert(animeObject);
 
                     callback(null, animeObject);
                 });
@@ -91,7 +124,19 @@ var Anime = (function() {
         anime.type = $(".dark_text:contains('Type:')").parent().text().substring(type.length + 1);
 
         var status = "Status:";
-        anime.status = $(".dark_text:contains('Status:')").parent().text().substring(status.length + 1);
+        var textStatus = $(".dark_text:contains('Status:')").parent().text().substring(status.length + 1);
+
+        anime.status = 0;
+        if (textStatus.toLowerCase().indexOf("finished") > -1)
+            anime.status = 2;
+        else if (textStatus.toLowerCase().indexOf("current") > -1)
+            anime.status = 1;
+
+        var episodes = "Episodes:";
+        anime.episodes =  $(".dark_text:contains('Episodes:')").parent().text().substring(episodes.length + 1).replace(/(\r\n|\n|\r|\t)/gm,"").trim();
+
+        if (isNaN(anime.episodes))
+            anime.episodes = -1;
 
         anime.genres = []
 
@@ -100,18 +145,19 @@ var Anime = (function() {
         for(var genre in englishGenres)
             anime.genres.push(englishGenres[genre].trim());
 
+        anime.malstats = {};
+
         var rating = "Rating:";
-        anime.rating =  $(".dark_text:contains('Rating:')").parent().text().substring(rating.length + 4);
+        anime.malstats.rating =  $(".dark_text:contains('Rating:')").parent().text().substring(rating.length + 4);
 
         var rank = "Ranked:";
-        anime.rank =  $(".dark_text:contains('Ranked:')").parent().text().substring(rank.length + 2);
+        anime.malstats.rank =  $(".dark_text:contains('Ranked:')").parent().first().contents().filter(function() {
+            return this.type !== 'tag';
+        }).text().trim().substring(1);
 
-        anime.score =  $(".dark_text:contains('Score:')").parent().first().contents().filter(function() {
+        anime.malstats.score =  $(".dark_text:contains('Score:')").parent().first().contents().filter(function() {
             return this.type !== 'tag';
         }).text().trim();
-
-        var episodes = "Episodes:";
-        anime.episodes =  $(".dark_text:contains('Episodes:')").parent().text().substring(episodes.length + 1).replace(/(\r\n|\n|\r|\t)/gm,"");        
 
         return anime;
     };
