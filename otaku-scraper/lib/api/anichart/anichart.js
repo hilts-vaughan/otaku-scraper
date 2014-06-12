@@ -6,36 +6,43 @@ var api = global.api
 
 api.anichart = {
     current: function(req, res, next) {
-        res.type('application/json');
-
-        var db = req.db;
-
-        AniChart.fetch(function(err, chart) {
-            res.send(chart)
-        }, db);
+        grabSeason(req, res, next);
     },
     spring: function(req, res, next) {
-        
+        grabSeason(req, res, next, 'spring');
     },
     summer: function(req, res, next) {
-        
+        grabSeason(req, res, next, 'summer');
     },
     fall: function(req, res, next) {
-        
+        grabSeason(req, res, next, 'fall');
     },
     winter: function(req, res, next) {
-        
+        grabSeason(req, res, next, 'winter');
     }
 };
+
+function grabSeason(req, res, next, season) {
+    if (season === undefined || season == null)
+        season = '';
+
+    res.type('application/json');
+
+    var db = req.db;
+
+    AniChart.fetch(season, function(err, chart) {
+        res.send(chart)
+    }, db);
+}
 
 var AniChart = (function() {
     function AniChart() {}
 
-    AniChart.fetch = function(callback, db) {
+    AniChart.fetch = function(season, callback, db) {
 
         var that = this;
         request({
-            url: 'http://anichart.net/',
+            url: 'http://anichart.net/' + season,
             headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
             timeout: 5000
         }, function(err, response, body) {
