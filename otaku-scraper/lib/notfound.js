@@ -1,15 +1,17 @@
 function notfound(options) {
-    var options = options || {};
-    var body = options.body || { 'error': 'not-found' };
+	var options = options || {};
+	var body = options.body || {
+		'error': 'not-found'
+	};
 
-    return function(req, res, next) {
-        if (res.body) return next();
+	return function(req, res, next) {
+		if (res.body) return next();
 
-        res.send(404, body);
-    };
+		res.send(404, body);
+	};
 };
 
 // Export the module
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = notfound;
+	module.exports = notfound;
 }

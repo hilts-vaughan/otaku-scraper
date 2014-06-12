@@ -1,8 +1,7 @@
-var api = global.api
-  , cheerio = require('cheerio')
-  , request = require('request')
-  , Anime = require('../mal/anime.js')
-  ;
+var api = global.api,
+    cheerio = require('cheerio'),
+    request = require('request'),
+    Anime = require('../mal/anime.js');
 
 api.anichart = {
     current: function(req, res, next) {
@@ -43,10 +42,12 @@ var AniChart = (function() {
         var that = this;
         request({
             url: 'http://anichart.net/' + season,
-            headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
+            headers: {
+                'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+            },
             timeout: 5000
         }, function(err, response, body) {
-            if (err) {            
+            if (err) {
                 return callback(err);
             }
 
@@ -86,10 +87,7 @@ var AniChart = (function() {
         }).text();
 
         var typeTitle = "TV -";
-        chart.season = (season.indexOf("AniChart.net") == -1
-            ? season.substring(0, season.indexof(" - "))
-            : $(".type_title:contains('TV - ')").text().substring(typeTitle.length + 1)
-            ).toLowerCase();
+        chart.season = (season.indexOf("AniChart.net") == -1 ? season.substring(0, season.indexof(" - ")) : $(".type_title:contains('TV - ')").text().substring(typeTitle.length + 1)).toLowerCase();
 
         chart.info = [];
         var itrInfo = $(".anime_info");

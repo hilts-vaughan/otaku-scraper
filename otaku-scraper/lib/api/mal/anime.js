@@ -1,7 +1,6 @@
-var api = global.api
-  , cheerio = require('cheerio')
-  , request = require('request')
-  ;
+var api = global.api,
+    cheerio = require('cheerio'),
+    request = require('request');
 
 api.mal.anime = {
     id: function(req, res, next) {
@@ -39,9 +38,11 @@ var Anime = (function() {
 
     Anime.byId = function(id, callback, db) {
         var that = this;
-        db.get('anime').findOne({"mal_id": id}, function(err, document) {
+        db.get('anime').findOne({
+            "mal_id": id
+        }, function(err, document) {
             // Feed from cache if we can
-            if(!err && document != null) {
+            if (!err && document != null) {
                 console.log('fetch');
                 callback(null, JSON.stringify(document, null, 2));
             }
@@ -49,11 +50,13 @@ var Anime = (function() {
             // Otherwise, we can try to parse
             else {
                 request({
-                    url: 'http://myanimelist.net/anime/'+id,
-                    headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
+                    url: 'http://myanimelist.net/anime/' + id,
+                    headers: {
+                        'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+                    },
                     timeout: 3000
                 }, function(err, response, body) {
-                    if (err) {            
+                    if (err) {
                         return callback(err);
                     }
 
@@ -133,7 +136,7 @@ var Anime = (function() {
             anime.status = 1;
 
         var episodes = "Episodes:";
-        anime.episodes =  $(".dark_text:contains('Episodes:')").parent().text().substring(episodes.length + 1).replace(/(\r\n|\n|\r|\t)/gm,"").trim();
+        anime.episodes = $(".dark_text:contains('Episodes:')").parent().text().substring(episodes.length + 1).replace(/(\r\n|\n|\r|\t)/gm, "").trim();
 
         if (isNaN(anime.episodes))
             anime.episodes = -1;
@@ -141,21 +144,21 @@ var Anime = (function() {
         anime.genres = []
 
         var genres = "Genres:";
-        var englishGenres = $(".dark_text:contains('Genres:')").parent().text().substring(genres.length + 4).split(",");        
-        for(var genre in englishGenres)
+        var englishGenres = $(".dark_text:contains('Genres:')").parent().text().substring(genres.length + 4).split(",");
+        for (var genre in englishGenres)
             anime.genres.push(englishGenres[genre].trim());
 
         anime.malstats = {};
 
         var rating = "Rating:";
-        anime.malstats.rating =  $(".dark_text:contains('Rating:')").parent().text().substring(rating.length + 4);
+        anime.malstats.rating = $(".dark_text:contains('Rating:')").parent().text().substring(rating.length + 4);
 
         var rank = "Ranked:";
-        anime.malstats.rank =  $(".dark_text:contains('Ranked:')").parent().first().contents().filter(function() {
+        anime.malstats.rank = $(".dark_text:contains('Ranked:')").parent().first().contents().filter(function() {
             return this.type !== 'tag';
         }).text().trim().substring(1);
 
-        anime.malstats.score =  $(".dark_text:contains('Score:')").parent().first().contents().filter(function() {
+        anime.malstats.score = $(".dark_text:contains('Score:')").parent().first().contents().filter(function() {
             return this.type !== 'tag';
         }).text().trim();
 
@@ -169,11 +172,13 @@ var Anime = (function() {
         var that = this;
 
         request({
-            url: 'http://myanimelist.net/anime.php?'+params+'&q='+encodeURIComponent(name.replace(/[\~\&\:\!\.\*]/g, "")),
-            headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
+            url: 'http://myanimelist.net/anime.php?' + params + '&q=' + encodeURIComponent(name.replace(/[\~\&\:\!\.\*]/g, "")),
+            headers: {
+                'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+            },
             timeout: 10000
         }, function(err, response, body) {
-            if (err) {            
+            if (err) {
                 return callback(err);
             }
 
@@ -203,7 +208,9 @@ var Anime = (function() {
             if (mal_id == -1 && params.length > 0)
                 Anime.lookup(name, callback, db, "");
             else
-                callback(null, { "mal_id": mal_id });
+                callback(null, {
+                    "mal_id": mal_id
+                });
         });
     };
 

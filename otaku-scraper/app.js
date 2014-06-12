@@ -1,21 +1,21 @@
 global.api = {
-    anichart: {},
-    ann: {},
-    mal: {},
+  anichart: {},
+  ann: {},
+  mal: {},
 };
 
-var api = global.api
-  , express = require('express')
-  , config = require('./config')
-  , Anime = require('./lib/api/mal/anime')
-  , notfound = require('./lib/notfound')
-  , AniChart = require('./lib/api/anichart/anichart')
-  , News = require('./lib/api/mal/news')
-  ;
+var api = global.api,
+  express = require('express'),
+  config = require('./config'),
+  Anime = require('./lib/api/mal/anime'),
+  notfound = require('./lib/notfound'),
+  AniChart = require('./lib/api/anichart/anichart'),
+  News = require('./lib/api/mal/news');
 
 var mongo = require('mongodb');
 var monk = require('monk');
 var db = monk('localhost/otaku');
+
 
 var app = express();
 if ('test' !== app.get('env')) app.use(express.logger(config.get('logger:format')));
@@ -27,8 +27,8 @@ app.use(cors());
 
 // Make our db accessible to our router
 app.use(function(req, res, next) {
-    req.db = db;
-    next();
+  req.db = db;
+  next();
 });
 
 apiRegister('/mal/anime/id/:id([0-9]+)', api.mal.anime.id);
@@ -48,15 +48,15 @@ apiRegister('/anichart/winter/:id([0-9]+)', api.anichart.winter);
 app.use(notfound());
 
 app.listen(config.get('port'), function() {
-    console.log('API server listening on port ' + config.get('port'));
+  console.log('API server listening on port ' + config.get('port'));
 });
 
 function apiRegister(url, func, version) {
-    if (isNaN(version))
-        version = 1;
+  if (isNaN(version))
+    version = 1;
 
-    app.get(url, func);
-    app.get('/v' + version + url, func);
+  app.get(url, func);
+  app.get('/v' + version + url, func);
 }
 
 module.exports = app;

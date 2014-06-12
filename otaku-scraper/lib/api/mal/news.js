@@ -1,7 +1,6 @@
-var api = global.api
-  , parseString = require('xml2js').parseString
-  , request = require('request')
-  ;
+var api = global.api,
+    parseString = require('xml2js').parseString,
+    request = require('request');
 
 api.mal.news = function(req, res, next) {
     res.type('application/json');
@@ -17,10 +16,12 @@ var News = (function() {
     News.fetch = function(callback) {
         request({
             url: 'http://myanimelist.net/rss.php?type=news',
-            headers: { 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0' },
+            headers: {
+                'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+            },
             timeout: 3000
         }, function(err, response, body) {
-            if (err) {            
+            if (err) {
                 return callback(err);
             }
 
