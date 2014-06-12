@@ -22,6 +22,8 @@ if ('test' !== app.get('env')) app.use(express.logger(config.get('logger:format'
 app.use(express.responseTime());
 app.use(express.favicon());
 app.use(express.json());
+var cors = require('cors');
+app.use(cors());
 
 // Make our db accessible to our router
 app.use(function(req, res, next) {
