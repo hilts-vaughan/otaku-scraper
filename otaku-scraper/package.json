@@ -28,6 +28,7 @@
     "grunt-contrib-watch": "0.5.3",
     "grunt-mocha-test": "0.7.0",
     "mocha": "1.13.0",
+    "mongoose": "^3.8.12",
     "should": "2.0.1",
     "sinon": "1.7.3",
     "supertest": "0.8.0",
