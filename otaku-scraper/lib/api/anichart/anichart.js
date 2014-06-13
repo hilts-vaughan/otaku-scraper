@@ -2,6 +2,7 @@ var api = global.api,
     cheerio = require('cheerio'),
     request = require('request'),
     Anime = require('../mal/anime.js');
+ChartModel = require('../../db/chartmodel');
 
 api.anichart = {
     current: function(req, res, next) {
@@ -37,8 +38,17 @@ function grabSeason(req, res, next, season) {
 var AniChart = (function() {
     function AniChart() {}
 
-    AniChart.fetch = function(season, callback, db) {
+    /**
+     * Downloads an entire season from the AniChart servers. This call is expensive as it will make a fetch to the MAL servers
+     * to retrieve IDs for cross referencing as well. This call should only be made periodically and data should be fetched using
+     * the 'fetch' function instead when possible.
+     * @param  {[string]}   season - A string value for the current season. Valud values are 'winter, summer, spring, fall'. No value indiciates current.
+     * @param  {Function} callback - The callback to be executed when
+     * @return {[type]}
+     */
+    AniChart.downloadSeason = function(season, callback) {
 
+        // Downloads the given season
         var that = this;
         request({
             url: 'http://anichart.net/' + season,
@@ -63,14 +73,48 @@ var AniChart = (function() {
                         chart.info[index].lookuperr = err;
 
                         if (returns == chart.info.length) {
-                            callback(null, chart);
+                            callback(chart);                            
                         }
                     };
                 })(i);
 
-                Anime.lookup(chart.info[i].title, callbacks[i], db);
+                Anime.lookup(chart.info[i].title, callbacks[i]);
             }
         });
+
+    
+
+    }
+
+    /**
+     * Fetches the current season that is requested chart information. This is always
+     * the current year that is being used.
+     * @param  {[string]}   season - The season string
+     * @param  {Function} callback - A simple callback to be executed
+     * @return {[type]}
+     */
+    AniChart.fetch = function(season, callback) {
+
+        var that = this;
+        ChartModel.findOne({
+            "season": season
+        }, function(err, chart) {
+            if(chart == null) {
+                // download chart data
+                that.downloadSeason(season, function(newChart){
+                    var chartModelData = new ChartModel(newChart);
+                    console.log('new chart');
+                    chartModelData.save();
+                    callback(null, newChart);
+                });
+            }
+            else {
+                // otherwise, send the chart directly
+                callback(null, chart);
+            }
+        });
+
+
     };
 
     /*
