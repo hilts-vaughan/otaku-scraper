@@ -44,6 +44,7 @@ apiRegister('/anichart/spring', api.anichart.spring);
 apiRegister('/anichart/summer', api.anichart.summer);
 apiRegister('/anichart/fall', api.anichart.fall);
 apiRegister('/anichart/winter', api.anichart.winter);
+apiRegister('/anichart/tba', api.anichart.tba);
 apiRegister('/anichart/spring/:id([0-9]+)', api.anichart.spring);
 apiRegister('/anichart/summer/:id([0-9]+)', api.anichart.summer);
 apiRegister('/anichart/fall/:id([0-9]+)', api.anichart.fall);

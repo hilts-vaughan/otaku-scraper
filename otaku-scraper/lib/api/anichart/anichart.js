@@ -19,6 +19,9 @@ api.anichart = {
     },
     winter: function(req, res, next) {
         grabSeason(req, res, next, 'winter');
+    },
+    tba: function(req, res, next) {
+        grabSeason(req, res, next, 'tba');
     }
 };
 
@@ -145,8 +148,10 @@ var AniChart = (function() {
         chart.season = (season.indexOf("AniChart.net") == -1 ? season.substring(0, season.indexof(" - ")) : $(".type_title:contains('TV - ')").text().substring(typeTitle.length + 1)).toLowerCase();
 
         chart.info = [];
-        var itrInfo = $(".anime_info");
+        var itrInfo = $(".anime_info,.anime_info_sml");
+        console.log("iterating");
         while (itrInfo.length > 0) {
+
             var contents = itrInfo.first().contents();
             var tabinfo = contents.filter(".tabs").contents().filter(".tab_info").contents();
             var info = {};
