@@ -8,7 +8,6 @@ api.mal.anime = {
     id: function(req, res, next) {
         res.type('application/json');
 
-        var db = req.db;
         var id = req.params.id;
 
         Anime.byId(id, function(err, anime) {
@@ -17,7 +16,7 @@ api.mal.anime = {
             }
 
             res.send(anime);
-        }, db);
+        });
     },
     name: function(req, res, next) {
         res.type('application/json');
@@ -31,7 +30,7 @@ api.mal.anime = {
             }
 
             res.send(anime);
-        }, db);
+        });
     }
 };
 

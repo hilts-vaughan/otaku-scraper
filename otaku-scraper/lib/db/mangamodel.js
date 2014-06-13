@@ -1,10 +1,10 @@
 /*
-	Defines our schema and interactive model for anime titles
+	Defines our schema and interactive model for chart data.
 	This is a mongoose defined model.
 */
 mongoose = require('mongoose');
 
-var animeSchema = mongoose.Schema({
+var mangaSchema = mongoose.Schema({
 	name: String,
 	expiry: Date,
 	titles: {
@@ -15,13 +15,13 @@ var animeSchema = mongoose.Schema({
 	poster: String,
 	synopsis: String,
 	type: String,
-	status: Number,
+	status: String,
 	episodes: Number,
 	genres: [],
 	malstats: Object,
 	mal_id: Number
 });
 
-var AnimeModel = mongoose.model('AnimeModel', animeSchema);
+var MangaModel = mongoose.model('manga', mangaSchema);
 
-module.exports = AnimeModel;
+module.exports = MangaModel;

@@ -22,6 +22,13 @@ api.anichart = {
     }
 };
 
+/**
+ * Uses to delegate API calls and grab the correct season.
+ * @param  {[Request]}   req - The request used to relay
+ * @param  {[Resource]}   res - The resource we wish to consume
+ * @param  {Function} next  - The next request
+ * @param  {[String]}   season - The string season to use.
+ */
 function grabSeason(req, res, next, season) {
     if (season === undefined || season == null)
         season = '';
@@ -44,7 +51,7 @@ var AniChart = (function() {
      * the 'fetch' function instead when possible.
      * @param  {[string]}   season - A string value for the current season. Valud values are 'winter, summer, spring, fall'. No value indiciates current.
      * @param  {Function} callback - The callback to be executed when
-     * @return {[type]}
+     * @return Nothing
      */
     AniChart.downloadSeason = function(season, callback) {
 
@@ -91,7 +98,7 @@ var AniChart = (function() {
      * the current year that is being used.
      * @param  {[string]}   season - The season string
      * @param  {Function} callback - A simple callback to be executed
-     * @return {[type]}
+     * @return {[type]} Nothing
      */
     AniChart.fetch = function(season, callback) {
 
@@ -117,10 +124,14 @@ var AniChart = (function() {
 
     };
 
-    /*
-      This method is really fragile; it's subject to page layout changes.
-      We should do our best to keep up with breakages
-    */
+
+
+    /**
+     * Takes some HTML and trys to parse a valid anime chart object from it. This function is incredibly fragile
+     * as it is subject to page layouts from the AniChart team. As such, treat this method with suspect.
+     * @param  {[string]} html - The HTML to work with and parse
+     * @return {[Object]} - An object containing information regarding the given HTMLs chart data
+     */
     AniChart.tryParse = function(html) {
         var $ = cheerio.load(html);
         var chart = {};

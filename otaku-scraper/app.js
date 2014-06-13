@@ -11,6 +11,7 @@ var api = global.api,
   notfound = require('./lib/notfound'),
   AniChart = require('./lib/api/anichart/anichart'),
   News = require('./lib/api/mal/news');
+  Manga = require('./lib/api/mal/manga');
 
 
 // Setup express
@@ -33,27 +34,30 @@ app.use(function(req, res, next) {
   next();
 });
 
-  // Register API once the database has been opened properly
-  apiRegister('/mal/anime/id/:id([0-9]+)', api.mal.anime.id);
-  apiRegister('/mal/anime/name/:name', api.mal.anime.name);
-  apiRegister('/mal/news/', api.mal.news);
-  apiRegister('/anichart', api.anichart.current);
-  apiRegister('/anichart/current', api.anichart.current);
-  apiRegister('/anichart/spring', api.anichart.spring);
-  apiRegister('/anichart/summer', api.anichart.summer);
-  apiRegister('/anichart/fall', api.anichart.fall);
-  apiRegister('/anichart/winter', api.anichart.winter);
-  apiRegister('/anichart/spring/:id([0-9]+)', api.anichart.spring);
-  apiRegister('/anichart/summer/:id([0-9]+)', api.anichart.summer);
-  apiRegister('/anichart/fall/:id([0-9]+)', api.anichart.fall);
-  apiRegister('/anichart/winter/:id([0-9]+)', api.anichart.winter);
-  
+// Register API once the database has been opened properly
+apiRegister('/mal/anime/id/:id([0-9]+)', api.mal.anime.id);
+apiRegister('/mal/anime/name/:name', api.mal.anime.name);
+apiRegister('/mal/news/', api.mal.news);
+apiRegister('/anichart', api.anichart.current);
+apiRegister('/anichart/current', api.anichart.current);
+apiRegister('/anichart/spring', api.anichart.spring);
+apiRegister('/anichart/summer', api.anichart.summer);
+apiRegister('/anichart/fall', api.anichart.fall);
+apiRegister('/anichart/winter', api.anichart.winter);
+apiRegister('/anichart/spring/:id([0-9]+)', api.anichart.spring);
+apiRegister('/anichart/summer/:id([0-9]+)', api.anichart.summer);
+apiRegister('/anichart/fall/:id([0-9]+)', api.anichart.fall);
+apiRegister('/anichart/winter/:id([0-9]+)', api.anichart.winter);
+
+
+// manga api hook
+apiRegister('/mal/manga/id/:id([0-9]+)', api.mal.manga.id);
+
 app.use(notfound());
 
 app.listen(config.get('port'), function() {
   console.log('API server listening on port ' + config.get('port'));
 });
-
 
 
 
