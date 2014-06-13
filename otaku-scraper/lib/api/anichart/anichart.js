@@ -6,7 +6,7 @@ ChartModel = require('../../db/chartmodel');
 
 api.anichart = {
     current: function(req, res, next) {
-        grabSeason(req, res, next);
+        grabSeason(req, res, next, 'airing');
     },
     spring: function(req, res, next) {
         grabSeason(req, res, next, 'spring');
