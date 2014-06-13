@@ -1,7 +1,9 @@
-var api = global.api,
-    cheerio = require('cheerio'),
-    request = require('request');
+// imports
+cheerio = require('cheerio');
+request = require('request');
+AnimeModel = require('../../db/animemodel');
 
+var api = global.api
 api.mal.anime = {
     id: function(req, res, next) {
         res.type('application/json');
@@ -38,17 +40,13 @@ var Anime = (function() {
 
     Anime.byId = function(id, callback, db) {
         var that = this;
-        db.get('anime').findOne({
-            "mal_id": id
-        }, function(err, document) {
-            // Feed from cache if we can
-            if (!err && document != null) {
-                console.log('fetch');
-                callback(null, JSON.stringify(document, null, 2));
-            }
-
-            // Otherwise, we can try to parse
-            else {
+        AnimeModel.find({
+            mal_id: id
+        }, function(err, animes) {
+            // If we couldn't find the thing we wanted, we'll simply go fetch it
+            if (animes.length == 0) {
+                console.log("Fetching anime from MAL DB with ID #" + id);
+    
                 request({
                     url: 'http://myanimelist.net/anime/' + id,
                     headers: {
@@ -64,15 +62,23 @@ var Anime = (function() {
                     animeObject['mal_id'] = id;
 
                     /* Insert the record iff it's not an invalid request */
-                    if (animeObject['name'] != "Invalid Request")
-                        db.get('anime').insert(animeObject);
+                    if (animeObject['name'] != "Invalid Request") {
+                        var animeModel = new AnimeModel(animeObject);
+                        animeModel.save();
+                    }
 
                     callback(null, animeObject);
                 });
+            }
+            else {
+                // return the entry in the database if we have it
+                callback(null, animes[0]);
+            }
 
-            } // end else
 
         });
+
+
 
     };
 
