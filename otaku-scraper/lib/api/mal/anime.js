@@ -45,7 +45,7 @@ var Anime = (function() {
             // If we couldn't find the thing we wanted, we'll simply go fetch it
             if (animes.length == 0) {
                 console.log("Fetching anime from MAL DB with ID #" + id);
-    
+
                 request({
                     url: 'http://myanimelist.net/anime/' + id,
                     headers: {
@@ -58,19 +58,49 @@ var Anime = (function() {
                     }
 
                     var animeObject = that.tryParse(body);
-                    animeObject['mal_id'] = id;
 
-                    /* Insert the record iff it's not an invalid request */
-                    if (animeObject['name'] != "Invalid Request") {
-                        var animeModel = new AnimeModel(animeObject);
-                        animeModel.save();
-                    }
+                    // Now, try and grab reviews URL, then we'll do a parse and scrape
+                    var $ = cheerio.load(body);
+                    var reviewURL = $("#horiznav_nav").find('a:contains(Reviews)').first().attr('href');
 
-                    callback(null, animeObject);
+                    request({
+                        url: reviewURL,
+                        headers: {
+                            'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+                        },
+                        timeout: 3000
+                    }, function(err, response, body) {
+
+                        var reviews = that.tryParseReviews(body);
+
+                        animeObject.reviews = reviews;
+                        animeObject['mal_id'] = id;
+
+                        /* Insert the record iff it's not an invalid request */
+                        if (animeObject['name'] != "Invalid Request") {
+
+
+
+                            var animeModel = new AnimeModel(animeObject);
+                            animeModel.save();
+                        }
+
+
+                        // we explictly do not want reviews
+                        delete animeObject.reviews;
+
+                        callback(null, animeObject);
+
+
+                    });
+
+
+
                 });
-            }
-            else {
+            } else {
                 // return the entry in the database if we have it
+                animes[0].reviews = undefined;
+                         
                 callback(null, animes[0]);
             }
 
@@ -80,6 +110,59 @@ var Anime = (function() {
 
 
     };
+
+
+    Anime.tryParseReviews = function(html) {
+
+        var $ = cheerio.load(html);
+        var reviews = [];
+
+
+
+        $('.borderDark').each(function(i, elem) {
+            var reviewItem = {};
+            reviewItem.avatar = $(this).find('.picSurround').find('img').attr('src');
+            reviewItem.authour = $(this).find('a').eq(2).text();
+            reviewItem.rating = parseInt($(this).find('a').eq(5).parent().text().substring(16));
+            reviewItem.body = $(this).find('.spaceit.textReadability').first().html().trim();
+            reviewItem.body = reviewItem.body.replace(/(\<br>)/gm, "\n").trim();
+            reviewItem.body = reviewItem.body.replace(/<[^>]*>/g, '');
+
+
+
+            // Grab the ratings, split
+            var ratingsStrings = reviewItem.body.split("\n\t\t");
+            ratingsStrings = ratingsStrings.filter(function(e) {
+                return e && e != '\t';
+            });
+
+            var index;
+
+            for (index = 0; index < ratingsStrings.length; ++index) {
+                ratingsStrings[index] = ratingsStrings[index].replace(/(\r\n|\n|\r|\t)/gm, "");
+            }
+
+            ratingsStrings.pop();
+
+            reviewItem.ratings = {};
+
+            for (index = 0; index < ratingsStrings.length; ++index) {
+                reviewItem.ratings[ratingsStrings[index].trim()] = parseInt(ratingsStrings[index + 1]);
+                index++;
+            }
+
+            var a = reviewItem.body.lastIndexOf('\t');
+            reviewItem.body = reviewItem.body.substring(a + 1, reviewItem.body.length - 9);
+
+
+
+            reviews.push(reviewItem);
+        });
+
+
+
+        return reviews;
+    }
 
     /*
       This method is really fragile; it's subject to page layout changes.
@@ -166,6 +249,8 @@ var Anime = (function() {
         anime.malstats.score = $(".dark_text:contains('Score:')").parent().first().contents().filter(function() {
             return this.type !== 'tag';
         }).text().trim();
+
+
 
         return anime;
     };
