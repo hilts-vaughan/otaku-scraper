@@ -6,7 +6,7 @@ ChartModel = require('../../db/chartmodel');
 
 api.anichart = {
     current: function(req, res, next) {
-        grabSeason(req, res, next, 'airing');
+        grabSeason(req, res, next);
     },
     spring: function(req, res, next) {
         grabSeason(req, res, next, 'spring');
@@ -41,7 +41,7 @@ function grabSeason(req, res, next, season) {
     var db = req.db;
 
     AniChart.fetch(season, function(err, chart) {
-        res.send(chart)
+        res.send(chart);
     }, db);
 }
 
@@ -57,7 +57,6 @@ var AniChart = (function() {
      * @return Nothing
      */
     AniChart.downloadSeason = function(season, callback) {
-
         // Downloads the given season
         var that = this;
         request({
@@ -66,7 +65,11 @@ var AniChart = (function() {
                 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
             },
             timeout: 5000
-        }, function(err, response, body) {
+        }, AniChart._getDownloadHandler(that, callback));
+    };
+
+    AniChart._getDownloadHandler = function(that, callback) {
+        return function(err, response, body) {
             if (err) {
                 return callback(err);
             }
@@ -90,11 +93,8 @@ var AniChart = (function() {
 
                 Anime.lookup(chart.info[i].title, callbacks[i]);
             }
-        });
-
-    
-
-    }
+        };
+    };
 
     /**
      * Fetches the current season that is requested chart information. This is always
@@ -104,27 +104,55 @@ var AniChart = (function() {
      * @return {[type]} Nothing
      */
     AniChart.fetch = function(season, callback) {
-
         var that = this;
-        ChartModel.findOne({
-            "season": season
-        }, function(err, chart) {
-            if(chart == null) {
-                // download chart data
-                that.downloadSeason(season, function(newChart){
-                    var chartModelData = new ChartModel(newChart);
-                    console.log('new chart');
-                    chartModelData.save();
-                    callback(null, newChart);
+
+        if (season == '' || season.toLowerCase() == "current") {
+            request({
+                url: 'http://anichart.net/' + season,
+                   headers: {
+                       'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+                   },
+                   timeout: 5000
+            }, function(err, response, body) {
+                season = response['request']['uri']['path'].replace(/\//gm, '');
+
+                ChartModel.findOne({
+                    "season": season
+                }, function(err, chart) {
+                    if(chart == null) {
+                        AniChart._getDownloadHandler(that, function(newChart){
+                            var chartModelData = new ChartModel(newChart);
+                            console.log('new chart');
+                            chartModelData.save();
+                            callback(null, newChart);
+                        })(err, response, body);
+                    }
+                    else {
+                        // otherwise, send the chart directly
+                        callback(null, chart);
+                    }
                 });
-            }
-            else {
-                // otherwise, send the chart directly
-                callback(null, chart);
-            }
-        });
-
-
+            });
+        }
+        else {
+            ChartModel.findOne({
+                "season": season
+            }, function(err, chart) {
+                if(chart == null) {
+                    AniChart.downloadSeason(season, function(newChart){
+                        var chartModelData = new ChartModel(newChart);
+                        console.log('new chart');
+                        chartModelData.save();
+                        callback(null, newChart);
+                    });
+                }
+                else {
+                    // otherwise, send the chart directly
+                    callback(null, chart);
+                }
+            });
+        }
+        
     };
 
 
@@ -180,7 +208,7 @@ var AniChart = (function() {
                 nEpisodes = -1;
             info.episodes = nEpisodes;
 
-            info.poster = $(contents).find(".thumb").attr('src');
+            info.poster = $(contents).find(".thumb").attr('data-original');
 
             var nobox = tabinfo.filter(".info_nobox:contains('" + twitter + "')").text().trim();
             var twitter = "Twitter:";
