@@ -1,0 +1,40 @@
+var api = global.api;
+
+api.ref.statusCodes = {
+	0: "STATUS_FUTURE",
+	STATUS_FUTURE: 0,
+	1: "STATUS_CURRENT",
+	STATUS_CURRENT: 1,
+	2: "STATUS_COMPLETED",
+	STATUS_COMPLETED: 2,
+};
+
+api.ref.anime.typeCodes = {
+	0: "TYPE_TV",
+	TYPE_TV: 0,
+	1: "TYPE_OVA",
+	TYPE_OVA: 1,
+	2: "TYPE_MOVIE",
+	TYPE_MOVIE: 2,
+	3: "TYPE_SPECIAL",
+	TYPE_SPECIAL: 3,
+	4: "TYPE_ONA",
+	TYPE_ONA: 4,
+	5: "TYPE_MUSIC",
+	TYPE_MUSIC: 5,
+};
+
+api.ref.anime.rating = {
+	0: "RATING_ALL",
+	RATING_ALL: 0,
+	1: "RATING_CHILDREN",
+	RATING_CHILDREN: 1,
+	2: "RATING_TEENS",
+	RATING_TEENS: 2,
+	3: "RATING_MATURE",
+	RATING_MATURE: 3,
+	4: "RATING_MILD_NUDITY",
+	RATING_MILD_NUDITY: 4,
+	5: "RATING_HENTAI",
+	RATING_HENTAI: 5,
+};
