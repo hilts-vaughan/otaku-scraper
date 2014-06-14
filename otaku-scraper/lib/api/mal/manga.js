@@ -4,13 +4,12 @@ MangaModel = require('../../db/MangaModel');
 
 var api = global.api
 api.mal.manga = {
-
 	id: function(req, res, next) {
 		res.type('application/json');
 
 		var id = req.params.id;
 
-		Manga.findById(id, function(err, manga) {
+		Manga.byId(id, function(err, manga) {
 			if (err) {
 				return next(err);
 			}
@@ -32,7 +31,7 @@ var Manga = (function() {
 	 * @param  {[Number]}   id - The ID of the manga to fetch
 	 * @param  {Function} callback - The callback to be executed with the manga model.
 	 */
-	Manga.findById = function(id, callback) {
+	Manga.byId = function(id, callback) {
 
 		var that = this;
 
@@ -40,7 +39,6 @@ var Manga = (function() {
 		MangaModel.findOne({
 			mal_id: id
 		}, function(err, manga) {
-
 			if (manga == null) {
 				// download and return
 				that._downloadManga(id, function(mangaObject) {
@@ -105,7 +103,7 @@ var Manga = (function() {
 			return this.type !== 'tag';
 		}).text();
 
-		// Set the expirty to 7 days; this is how often we evict anime entries from our cache
+		// Set the expiry to 7 days; this is how often we evict anime entries from our cache
 		var now = new Date();
 		manga.expiry = now.setDate(now.getDate() + 7);
 
