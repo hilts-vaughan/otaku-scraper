@@ -1,4 +1,5 @@
 global.api = {
+  ref: {},
   anichart: {},
   ann: {},
   mal: {},
@@ -27,11 +28,10 @@ app.use(cors());
 
 // Make our db accessible to our router
 app.use(function(req, res, next) {
+    // Patch the requests incoming
+    req.db = db;
 
-  // Patch the requests incoming
-  req.db = db;
-
-  next();
+    next();
 });
 
 // Register API once the database has been opened properly
@@ -57,7 +57,7 @@ apiRegister('/mal/manga/id/:id([0-9]+)', api.mal.manga.id);
 app.use(notfound());
 
 app.listen(config.get('port'), function() {
-  console.log('API server listening on port ' + config.get('port'));
+    console.log('API server listening on port ' + config.get('port'));
 });
 
 
@@ -69,26 +69,22 @@ mongoose.connect('mongodb://localhost/otaku');
 
 var db = mongoose.connection;
 db.on('error', function(err) {
-  console.log(err + " while attempting to open the database. Exiting.");
-  process.exit(1);
+    console.log(err + " while attempting to open the database. Exiting.");
+    process.exit(1);
 });
 
 db.once('open', function callback() {
-
-  console.log("Registering API routes...")
-
-
-
+    console.log("Registering API routes...")
 });
 
 
 function apiRegister(url, func, version) {
-  if (isNaN(version))
-    version = 1;
+    if (isNaN(version))
+        version = 1;
 
-  app.get(url, func);
-  console.log(url);
-  app.get('/v' + version + url, func);
+    app.get(url, func);
+    console.log(url);
+    app.get('/v' + version + url, func);
 }
 
 module.exports = app;
