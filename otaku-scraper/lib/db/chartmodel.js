@@ -6,8 +6,7 @@ mongoose = require('mongoose');
 
 var chartSchema = mongoose.Schema({
 	season: String,
-	info: [],
-	mal_id: Number
+	info: []
 });
 
 var ChartModel = mongoose.model('airingcharts', chartSchema);
