@@ -19,7 +19,8 @@ var animeSchema = mongoose.Schema({
 	episodes: Number,
 	genres: [],
 	malstats: Object,
-	mal_id: Number
+	mal_id: Number,
+	reviews: []
 });
 
 var AnimeModel = mongoose.model('AnimeModel', animeSchema);

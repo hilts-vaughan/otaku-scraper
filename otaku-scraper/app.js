@@ -8,10 +8,12 @@ var api = global.api,
   express = require('express'),
   config = require('./config'),
   Anime = require('./lib/api/mal/anime'),
+  AnimeReviews = require('./lib/api/mal/animereviews')
   notfound = require('./lib/notfound'),
   AniChart = require('./lib/api/anichart/anichart'),
   News = require('./lib/api/mal/news');
   Manga = require('./lib/api/mal/manga');
+
 
 
 // Setup express
@@ -36,6 +38,8 @@ app.use(function(req, res, next) {
 
 // Register API once the database has been opened properly
 apiRegister('/mal/anime/id/:id([0-9]+)', api.mal.anime.id);
+apiRegister('/mal/anime/reviews/:id([0-9]+)', api.mal.anime.reviews.all);
+
 apiRegister('/mal/anime/name/:name', api.mal.anime.name);
 apiRegister('/mal/news/', api.mal.news);
 apiRegister('/anichart', api.anichart.current);

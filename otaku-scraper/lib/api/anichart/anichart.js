@@ -180,7 +180,6 @@ var AniChart = (function() {
                 nEpisodes = -1;
             info.episodes = nEpisodes;
 
-            info.poster = $(contents).find(".thumb").attr('src');
 
             var nobox = tabinfo.filter(".info_nobox:contains('" + twitter + "')").text().trim();
             var twitter = "Twitter:";
