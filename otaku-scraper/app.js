@@ -5,17 +5,17 @@ global.api = {
   mal: {},
 };
 
-var api = global.api,
-  express = require('express'),
-  config = require('./config'),
-  Anime = require('./lib/api/mal/anime'),
-  AnimeReviews = require('./lib/api/mal/animereviews')
-  notfound = require('./lib/notfound'),
-  AniChart = require('./lib/api/anichart/anichart'),
-  News = require('./lib/api/mal/news');
-  Manga = require('./lib/api/mal/manga');
-
-
+var api = global.api
+  , express = require('express')
+  , config = require('./config')
+  , Anime = require('./lib/api/mal/anime')
+  , AnimeReviews = require('./lib/api/mal/animereviews')
+  , notfound = require('./lib/notfound')
+  , AniChart = require('./lib/api/anichart/anichart')
+  , News = require('./lib/api/mal/news')
+  , Manga = require('./lib/api/mal/manga')
+  , reference = require('./lib/api/ref')
+  ;
 
 // Setup express
 var app = express();
@@ -38,10 +38,14 @@ app.use(function(req, res, next) {
 
 // Register API once the database has been opened properly
 apiRegister('/mal/anime/id/:id([0-9]+)', api.mal.anime.id);
-apiRegister('/mal/anime/reviews/:id([0-9]+)', api.mal.anime.reviews.all);
-
+apiRegister('/mal/anime/id/:id([0-9]+)/reviews', api.mal.anime.reviews.idAll);
+apiRegister('/mal/anime/search/:name', api.mal.anime.search);
 apiRegister('/mal/anime/name/:name', api.mal.anime.name);
+apiRegister('/mal/anime/name/:name/reviews', api.mal.anime.reviews.nameAll);
+apiRegister('/mal/manga/id/:id([0-9]+)', api.mal.manga.id);
+apiRegister('/mal/manga/name/:name', api.mal.anime.name);
 apiRegister('/mal/news/', api.mal.news);
+
 apiRegister('/anichart', api.anichart.current);
 apiRegister('/anichart/current', api.anichart.current);
 apiRegister('/anichart/spring', api.anichart.spring);
@@ -53,6 +57,10 @@ apiRegister('/anichart/spring/:id([0-9]+)', api.anichart.spring);
 apiRegister('/anichart/summer/:id([0-9]+)', api.anichart.summer);
 apiRegister('/anichart/fall/:id([0-9]+)', api.anichart.fall);
 apiRegister('/anichart/winter/:id([0-9]+)', api.anichart.winter);
+
+apiRegister('/ref/status/:code([0-9]+)', api.ref.statusCodes.get);
+apiRegister('/ref/anime/type/:code([0-9]+)', api.ref.anime.typeCodes.get);
+apiRegister('/ref/anime/rating/:code([0-9]+)', api.ref.anime.ratings.get);
 
 
 // manga api hook
@@ -91,4 +99,7 @@ function apiRegister(url, func, version) {
     app.get('/v' + version + url, func);
 }
 
-module.exports = app;
+// Export the module
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = app;
+}

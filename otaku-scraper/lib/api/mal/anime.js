@@ -1,7 +1,7 @@
 // imports
-cheerio = require('cheerio');
-request = require('request');
-AnimeModel = require('../../db/animemodel');
+var cheerio = require('cheerio'),
+    request = require('request'),
+    AnimeModel = require('../../db/animemodel');
 
 var api = global.api
 api.mal.anime = {
@@ -9,7 +9,6 @@ api.mal.anime = {
         res.type('application/json');
 
         var id = req.params.id;
-
         Anime.byId(id, function(err, anime) {
             if (err) {
                 return next(err);
@@ -21,15 +20,25 @@ api.mal.anime = {
     name: function(req, res, next) {
         res.type('application/json');
 
-        var db = req.db;
         var name = req.params.name;
-
-        Anime.lookup(name, function(err, anime) {
+        Anime.byName(name, function(err, anime) {
             if (err) {
                 return next(err);
             }
 
             res.send(anime);
+        });
+    },
+    search: function(req, res, next) {
+        res.type('application/json');
+
+        var name = req.params.name;
+        Anime.lookup(name, function(err, mal_id) {
+            if (err) {
+                return next(err);
+            }
+
+            res.send({ "mal_id": mal_id });
         });
     }
 };
@@ -37,13 +46,23 @@ api.mal.anime = {
 var Anime = (function() {
     function Anime() {}
 
-    Anime.byId = function(id, callback, db) {
+    Anime.byName = function(name, callback) {
+        Anime.lookup(name, function(err, mal_id) {
+            if (err) {
+                return callback(err);
+            }
+
+            Anime.byId(mal_id, callback);
+        });
+    };
+
+    Anime.byId = function(id, callback) {
         var that = this;
         AnimeModel.find({
             mal_id: id
-        }, function(err, animes) {
+        }, function(err, anime) {
             // If we couldn't find the thing we wanted, we'll simply go fetch it
-            if (animes.length == 0) {
+            if (anime == null || anime.length == 0) {
                 console.log("Fetching anime from MAL DB with ID #" + id);
 
                 request({
@@ -53,116 +72,30 @@ var Anime = (function() {
                     },
                     timeout: 3000
                 }, function(err, response, body) {
+                    console.log(id);
                     if (err) {
                         return callback(err);
                     }
 
                     var animeObject = that.tryParse(body);
+                    animeObject['mal_id'] = id;
 
-                    // Now, try and grab reviews URL, then we'll do a parse and scrape
-                    var $ = cheerio.load(body);
-                    var reviewURL = $("#horiznav_nav").find('a:contains(Reviews)').first().attr('href');
+                    /* Insert the record iff it's not an invalid request */
+                    if (animeObject['name'] != "Invalid Request") {
+                        var animeModel = new AnimeModel(animeObject);
+                        animeModel.save();
+                    }
 
-                    request({
-                        url: reviewURL,
-                        headers: {
-                            'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
-                        },
-                        timeout: 3000
-                    }, function(err, response, body) {
-
-                        var reviews = that.tryParseReviews(body);
-
-                        animeObject.reviews = reviews;
-                        animeObject['mal_id'] = id;
-
-                        /* Insert the record iff it's not an invalid request */
-                        if (animeObject['name'] != "Invalid Request") {
-
-
-
-                            var animeModel = new AnimeModel(animeObject);
-                            animeModel.save();
-                        }
-
-
-                        // we explictly do not want reviews
-                        delete animeObject.reviews;
-
-                        callback(null, animeObject);
-
-
-                    });
-
-
-
+                    callback(null, animeObject);
                 });
             } else {
-                // return the entry in the database if we have it
-                animes[0].reviews = undefined;
-                         
-                callback(null, animes[0]);
+                if (anime.length === undefined)
+                    callback(null, anime);
+                else
+                    callback(null, anime[0]);
             }
-
-
         });
-
-
-
     };
-
-
-    Anime.tryParseReviews = function(html) {
-
-        var $ = cheerio.load(html);
-        var reviews = [];
-
-
-
-        $('.borderDark').each(function(i, elem) {
-            var reviewItem = {};
-            reviewItem.avatar = $(this).find('.picSurround').find('img').attr('src');
-            reviewItem.authour = $(this).find('a').eq(2).text();
-            reviewItem.rating = parseInt($(this).find('a').eq(5).parent().text().substring(16));
-            reviewItem.body = $(this).find('.spaceit.textReadability').first().html().trim();
-            reviewItem.body = reviewItem.body.replace(/(\<br>)/gm, "\n").trim();
-            reviewItem.body = reviewItem.body.replace(/<[^>]*>/g, '');
-
-
-
-            // Grab the ratings, split
-            var ratingsStrings = reviewItem.body.split("\n\t\t");
-            ratingsStrings = ratingsStrings.filter(function(e) {
-                return e && e != '\t';
-            });
-
-            var index;
-
-            for (index = 0; index < ratingsStrings.length; ++index) {
-                ratingsStrings[index] = ratingsStrings[index].replace(/(\r\n|\n|\r|\t)/gm, "");
-            }
-
-            ratingsStrings.pop();
-
-            reviewItem.ratings = {};
-
-            for (index = 0; index < ratingsStrings.length; ++index) {
-                reviewItem.ratings[ratingsStrings[index].trim()] = parseInt(ratingsStrings[index + 1]);
-                index++;
-            }
-
-            var a = reviewItem.body.lastIndexOf('\t');
-            reviewItem.body = reviewItem.body.substring(a + 1, reviewItem.body.length - 9);
-
-
-
-            reviews.push(reviewItem);
-        });
-
-
-
-        return reviews;
-    }
 
     /*
       This method is really fragile; it's subject to page layout changes.
@@ -179,7 +112,7 @@ var Anime = (function() {
 
         anime.name = name;
 
-        // Set the expirty to 7 days; this is how often we evict anime entries from our cache
+        // Set the expiry to 7 days; this is how often we evict anime entries from our cache
         var now = new Date();
         anime.expiry = now.setDate(now.getDate() + 7);
 
@@ -250,12 +183,10 @@ var Anime = (function() {
             return this.type !== 'tag';
         }).text().trim();
 
-
-
         return anime;
     };
 
-    Anime.lookup = function(name, callback, db, params) {
+    Anime.lookup = function(name, callback, params) {
         if (params === undefined)
             params = "type=1";
 
@@ -296,11 +227,9 @@ var Anime = (function() {
                 mal_id = -2;
 
             if (mal_id == -1 && params.length > 0)
-                Anime.lookup(name, callback, db, "");
+                Anime.lookup(name, callback, "");
             else
-                callback(null, {
-                    "mal_id": mal_id
-                });
+                callback(null, mal_id);
         });
     };
 

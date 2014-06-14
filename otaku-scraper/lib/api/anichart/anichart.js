@@ -1,8 +1,8 @@
 var api = global.api,
     cheerio = require('cheerio'),
     request = require('request'),
-    Anime = require('../mal/anime.js');
-ChartModel = require('../../db/chartmodel');
+    Anime = require('../mal/anime.js'),
+    ChartModel = require('../../db/chartmodel');
 
 api.anichart = {
     current: function(req, res, next) {
@@ -80,9 +80,9 @@ var AniChart = (function() {
 
             for (var i = 0; i < chart.info.length; i++) {
                 callbacks[i] = (function(index) {
-                    return function(err, lookup) {
+                    return function(err, mal_id) {
                         returns++;
-                        chart.info[index].mal_id = err ? -3 : lookup.mal_id;
+                        chart.info[index].mal_id = err ? -3 : mal_id;
                         chart.info[index].lookuperr = err;
 
                         if (returns == chart.info.length) {
@@ -179,7 +179,6 @@ var AniChart = (function() {
         var itrInfo = $(".anime_info,.anime_info_sml");
         console.log("iterating");
         while (itrInfo.length > 0) {
-
             var contents = itrInfo.first().contents();
             var tabinfo = contents.filter(".tabs").contents().filter(".tab_info").contents();
             var info = {};
