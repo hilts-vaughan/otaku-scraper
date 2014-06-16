@@ -141,6 +141,16 @@ var Anime = (function() {
         if (isNaN(anime.episodes))
             anime.episodes = -1;
 
+        var airDate = "Aired:";
+        var airArr = $(".dark_text:contains('Aired:')").parent().text().substring(airDate.length + 1).split("to");
+
+        var airJSDate = Date.parse(airArr[0]);
+        if(isNaN(airJSDate))
+            airJSDate = null;
+
+        anime.airDate = airJSDate;
+
+
         anime.genres = []
 
         var genres = "Genres:";
