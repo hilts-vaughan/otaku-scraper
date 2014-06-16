@@ -67,7 +67,7 @@ var Manga = (function() {
 				console.log("Fetching manga from MAL DB with ID #" + id);
 
 				// download and return
-				MAL._contentDownload(id, function(object) {
+				MAL.contentDownload(id, function(object) {
 
 					// Persist to the DB if we need to
 					/* Insert the record iff it's not an invalid request */
@@ -87,39 +87,10 @@ var Manga = (function() {
 
 
 	/**
-	 * Fetches a manga from the MAL DB and executes a callback
-	 * containing the data. This call is expensive to make and speed
-	 * is dependent on the remote server. It is possible to get garbage back.
-	 * @param  {[Number]}   id - The ID of the manga to download
-	 * @param  {Function} callback - The callback to be executed
-	 */
-	Manga._download = function(id, callback) {
-		var that = this;
-
-		request({
-			url: 'http://myanimelist.net/manga/' + id,
-			headers: {
-				'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
-			},
-			timeout: 3000
-		}, function(error, response, body) {
-			if (error) {
-				return callback(error);
-			}
-			
-			var object = that._tryParse(body);
-			object['mal_id'] = id;
-
-			callback(object);
-		});
-	};
-
-
-	/**
 	 * Attempts to parse the HTML from the given MAL page and return valid JSON.
 	 * @param  {[type]} html - A valid HTML markup
 	 */
-	Manga._tryParse = function(html) {
+	Manga.tryParse = function(html) {
 
 		var $ = cheerio.load(html);
 		var manga = {};
@@ -197,6 +168,14 @@ var Manga = (function() {
             if (isresults) {
                 if (body.indexOf("No titles that matched your query were found.") == -1) {
                     var atag = $("a:contains('" + name.toLowerCase() + "')");
+			        atag.each(function(index, element) {
+			        	var selector = $(element);
+
+			        	if (selector.text().trim() == name.toLowerCase().trim()) {
+			        		atag = selector;
+			        	}
+			        });
+
                     var href = atag.attr("href");
                     var offset = "/manga/".length;
                     mal_id = href;

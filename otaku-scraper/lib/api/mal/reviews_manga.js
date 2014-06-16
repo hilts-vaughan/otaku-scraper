@@ -24,13 +24,13 @@ api.mal.manga.reviews = {
 		res.type('application/json');
 		var name = req.params.name;
 
-		MangaReviews.byName(name, function(err, reviews) {
+		CommonReviews.byName(name, function(err, reviews) {
 			if (err) {
 				return next(err);
 			}
 
 			res.send(reviews);
-		});
+		}, Manga, MangaReviews);
 	}
 };
 
@@ -48,7 +48,7 @@ var MangaReviews = (function() {
 		}, function(err, reviews) {
 			if (reviews == null) {
 				console.log("debug");
-				CommonReviews._downloadReviews(id, function(reviewsObject) {
+				CommonReviews.downloadReviews(id, function(reviewsObject) {
 					callback(null, reviewsObject);
 				}, 'manga', Manga, MangaReviewsModel);
 			} else {

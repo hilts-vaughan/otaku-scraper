@@ -59,7 +59,7 @@ var Anime = (function() {
                 console.log("Fetching anime from MAL DB with ID #" + id);
 
                 // download and return
-                MAL._contentDownload(id, function(object) {
+                MAL.contentDownload(id, function(object) {
 
                     // Persist to the DB if we need to
                     /* Insert the record iff it's not an invalid request */
@@ -76,32 +76,11 @@ var Anime = (function() {
         });
     };
 
-    Anime._download = function(id, callback) {
-        var that = this;
-
-        request({
-            url: 'http://myanimelist.net/anime/' + id,
-            headers: {
-                'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
-            },
-            timeout: 3000
-        }, function(error, response, body) {
-            if (error) {
-                return callback(error);
-            }
-            
-            var object = that._tryParse(body);
-            object['mal_id'] = id;
-
-            callback(object);
-        });
-    };
-
     /*
       This method is really fragile; it's subject to page layout changes.
       We should do our best to keep up with breakages
     */
-    Anime._tryParse = function(html) {
+    Anime.tryParse = function(html) {
         var $ = cheerio.load(html);
         var anime = {};
 
@@ -210,6 +189,14 @@ var Anime = (function() {
             if (isresults) {
                 if (body.indexOf("No titles that matched your query were found.") == -1) {
                     var atag = $("a:contains('" + name.toLowerCase() + "')");
+                    atag.each(function(index, element) {
+                        var selector = $(element);
+
+                        if (selector.text().trim() == name.toLowerCase().trim()) {
+                            atag = selector;
+                        }
+                    });
+
                     var href = atag.attr("href");
                     var offset = "/anime/".length;
                     mal_id = href;

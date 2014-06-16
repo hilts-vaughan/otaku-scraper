@@ -24,13 +24,13 @@ api.mal.anime.reviews = {
 		res.type('application/json');
 		var name = req.params.name;
 
-		AnimeReviews.byName(name, function(err, reviews) {
+		CommonReviews.byName(name, function(err, reviews) {
 			if (err) {
 				return next(err);
 			}
 
 			res.send(reviews);
-		});
+		}, Anime, AnimeReviews);
 	}
 };
 
@@ -39,15 +39,13 @@ var AnimeReviews = (function() {
 	function AnimeReviews() {}
 
 	AnimeReviews.byId = function(id, callback) {
-		var that = this;
-
 		id = Number(id);
 
 		AnimeReviewsModel.findOne({
 			"mal_id": id
 		}, function(err, reviews) {
 			if (reviews == null) {
-				CommonReviews._downloadReviews(id, function(reviewsObject) {
+				CommonReviews.downloadReviews(id, function(reviewsObject) {
 					callback(null, reviewsObject);
 				}, 'anime', Anime, AnimeReviewsModel);
 			} else {
@@ -57,8 +55,6 @@ var AnimeReviews = (function() {
 	};
 
 	AnimeReviews.byName = function(name, callback) {
-		var that = this;
-
 		Anime.lookup(name, function(err, mal_id) {
             if (err) {
                 return next(err);

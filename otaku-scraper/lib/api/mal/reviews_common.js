@@ -6,6 +6,16 @@ var api = global.api
 var CommonReviews = (function() {
 	function CommonReviews() {}
 
+	CommonReviews.byName = function(name, callback, objectTypeContent, objectTypeReviews) {
+		objectTypeContent.lookup(name, function(err, mal_id) {
+            if (err) {
+                return next(err);
+            }
+
+            objectTypeReviews.byId(mal_id, callback);
+        });
+	};
+
 	CommonReviews.validateURL = function(url) {
 		url = url.trim();
 
@@ -15,7 +25,7 @@ var CommonReviews = (function() {
 		return url;
 	};
 
-	CommonReviews._downloadReviews = function(id, callback, urlType, objectType, modelType) {
+	CommonReviews.downloadReviews = function(id, callback, urlType, objectType, modelType) {
 		request({
 			url: 'http://myanimelist.net/' + urlType + '/' + id,
 			headers: {

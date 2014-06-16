@@ -16,7 +16,7 @@ var MAL = (function() {
         });
     };
 
-    MAL._contentDownload = function(id, callback, urlType, objectType) {
+    MAL.contentDownload = function(id, callback, urlType, objectType) {
         request({
             url: 'http://myanimelist.net/' + urlType + '/' + id,
             headers: {
@@ -28,7 +28,7 @@ var MAL = (function() {
                 return callback(error);
             }
             
-            var object = objectType._tryParse(body);
+            var object = objectType.tryParse(body);
             object['mal_id'] = id;
 
             callback(object);
