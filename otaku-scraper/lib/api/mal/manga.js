@@ -1,48 +1,50 @@
-var cheerio = require('cheerio')
-  , request = require('request')
-  , MAL = require("./mal.js")
-  , MangaModel = require('../../db/model_manga')
-  ;
+var cheerio = require('cheerio'),
+	request = require('request'),
+	MAL = require("./mal.js"),
+	MangaModel = require('../../db/model_manga');
+	ExpiryHelper = require('../../expiryhelper');
 
 var api = global.api;
 
 api.mal.manga = {
 	id: function(req, res, next) {
-        res.type('application/json');
+		res.type('application/json');
 
-        var id = req.params.id;
-        Manga.byId(id, function(err, manga) {
-            if (err) {
-                return next(err);
-            }
+		var id = req.params.id;
+		Manga.byId(id, function(err, manga) {
+			if (err) {
+				return next(err);
+			}
 
-            res.send(manga);
-        });
-    },
-    name: function(req, res, next) {
-        res.type('application/json');
+			res.send(manga);
+		});
+	},
+	name: function(req, res, next) {
+		res.type('application/json');
 
-        var name = req.params.name;
-        MAL.contentByName(name, function(err, manga) {
-            if (err) {
-                return next(err);
-            }
+		var name = req.params.name;
+		MAL.contentByName(name, function(err, manga) {
+			if (err) {
+				return next(err);
+			}
 
-            res.send(manga);
-        }, Manga);
-    },
-    search: function(req, res, next) {
-        res.type('application/json');
+			res.send(manga);
+		}, Manga);
+	},
+	search: function(req, res, next) {
+		res.type('application/json');
 
-        var name = req.params.name;
-        Manga.lookup(name, function(err, mal_id) {
-            if (err) {
-                return next(err);
-            }
+		var name = req.params.name;
+		Manga.lookup(name, function(err, mal_id) {
+			if (err) {
+				return next(err);
+			}
 
-            res.send({ "mal_id": mal_id });
-        });
-    }
+			res.send({
+				"mal_id": mal_id
+			});
+		});
+	}
 }
 
 var Manga = (function() {
@@ -115,10 +117,10 @@ var Manga = (function() {
 		var textStatus = $(".dark_text:contains('Status:')").parent().text().substring(status.length + 1);
 
 		manga.status = 0;
-        if (textStatus.toLowerCase().indexOf("finished") > -1)
-            manga.status = 2;
-        else if (textStatus.toLowerCase().indexOf("publishing") > -1)
-            manga.status = 1;
+		if (textStatus.toLowerCase().indexOf("finished") > -1)
+			manga.status = 2;
+		else if (textStatus.toLowerCase().indexOf("publishing") > -1)
+			manga.status = 1;
 
 		manga.genres = [];
 		var genres = "Genres:";
@@ -130,6 +132,17 @@ var Manga = (function() {
 
 		var rating = "Rating:";
 		manga.malstats.rating = $(".dark_text:contains('Rating:')").parent().text().substring(rating.length + 4);
+
+
+		var publish = "Published:";
+		var pubArr = $(".dark_text:contains('Published:')").parent().text().substring(publish.length + 1).split("to");
+
+		var publishJSDate = Date.parse(pubArr[0]);
+		if (isNaN(publishJSDate))
+			publishJSDate = null;
+
+		manga.publishDate = publishJSDate;
+
 
 		var rank = "Ranked:";
 		manga.malstats.rank = $(".dark_text:contains('Ranked:')").parent().first().contents().filter(function() {
@@ -145,59 +158,59 @@ var Manga = (function() {
 	};
 
 	Manga.lookup = function(name, callback, params) {
-        if (params === undefined)
-            params = "type=1";
+		if (params === undefined)
+			params = "type=1";
 
-        var that = this;
+		var that = this;
 
-        request({
-            url: 'http://myanimelist.net/manga.php?' + params + '&q=' + encodeURIComponent(name.replace(/[\~\&\:\!\.\*]/g, "")),
-            headers: {
-                'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
-            },
-            timeout: 10000
-        }, function(err, response, body) {
-            if (err) {
-                return callback(err);
-            }
+		request({
+			url: 'http://myanimelist.net/manga.php?' + params + '&q=' + encodeURIComponent(name.replace(/[\~\&\:\!\.\*]/g, "")),
+			headers: {
+				'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+			},
+			timeout: 10000
+		}, function(err, response, body) {
+			if (err) {
+				return callback(err);
+			}
 
-            var $ = cheerio.load(body.toLowerCase());
-            var isresults = $('.normal_header').text().indexOf("search results") != -1;
-            var mal_id = -1;
+			var $ = cheerio.load(body.toLowerCase());
+			var isresults = $('.normal_header').text().indexOf("search results") != -1;
+			var mal_id = -1;
 
-            if (isresults) {
-                if (body.indexOf("No titles that matched your query were found.") == -1) {
-                    var atag = $("a:contains('" + name.toLowerCase() + "')");
-			        atag.each(function(index, element) {
-			        	var selector = $(element);
+			if (isresults) {
+				if (body.indexOf("No titles that matched your query were found.") == -1) {
+					var atag = $("a:contains('" + name.toLowerCase() + "')");
+					atag.each(function(index, element) {
+						var selector = $(element);
 
-			        	if (selector.text().trim() == name.toLowerCase().trim()) {
-			        		atag = selector;
-			        	}
-			        });
+						if (selector.text().trim() == name.toLowerCase().trim()) {
+							atag = selector;
+						}
+					});
 
-                    var href = atag.attr("href");
-                    var offset = "/manga/".length;
-                    mal_id = href;
-                    if (href !== undefined)
-                        mal_id = mal_id.substring(offset, href.indexOf("/", offset));
-                }
-            } else {
-                var doEdit = "javascript:doedit(";
-                var idxDoEdit = body.indexOf(doEdit) + doEdit.length;
-                mal_id = body.substring(idxDoEdit, body.indexOf(");", idxDoEdit));
-            }
+					var href = atag.attr("href");
+					var offset = "/manga/".length;
+					mal_id = href;
+					if (href !== undefined)
+						mal_id = mal_id.substring(offset, href.indexOf("/", offset));
+				}
+			} else {
+				var doEdit = "javascript:doedit(";
+				var idxDoEdit = body.indexOf(doEdit) + doEdit.length;
+				mal_id = body.substring(idxDoEdit, body.indexOf(");", idxDoEdit));
+			}
 
-            mal_id = new Number(mal_id);
-            if (isNaN(mal_id))
-                mal_id = -2;
+			mal_id = new Number(mal_id);
+			if (isNaN(mal_id))
+				mal_id = -2;
 
-            if (mal_id == -1 && params.length > 0)
-                Anime.lookup(name, callback, "");
-            else
-                callback(null, mal_id);
-        });
-    };
+			if (mal_id == -1 && params.length > 0)
+				Anime.lookup(name, callback, "");
+			else
+				callback(null, mal_id);
+		});
+	};
 
 	return Manga;
 
@@ -205,5 +218,5 @@ var Manga = (function() {
 
 // Export the module
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Manga;
+	module.exports = Manga;
 }

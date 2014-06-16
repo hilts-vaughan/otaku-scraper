@@ -19,7 +19,8 @@ var mangaSchema = mongoose.Schema({
 	episodes: Number,
 	genres: [],
 	malstats: Object,
-	mal_id: Number
+	mal_id: Number,
+	publishDate: Date
 });
 
 var MangaModel = mongoose.model('MangaModel', mangaSchema);

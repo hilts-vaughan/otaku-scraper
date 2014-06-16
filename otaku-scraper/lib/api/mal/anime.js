@@ -1,8 +1,8 @@
-var cheerio = require('cheerio')
-  , request = require('request')
-  , MAL = require("./mal.js")
-  , AnimeModel = require('../../db/model_anime')
-  ;
+var cheerio = require('cheerio'),
+    request = require('request'),
+    MAL = require("./mal.js"),
+    AnimeModel = require('../../db/model_anime');
+    ExpiryHelper = require('../../expiryhelper');
 
 var api = global.api;
 
@@ -40,7 +40,9 @@ api.mal.anime = {
                 return next(err);
             }
 
-            res.send({ "mal_id": mal_id });
+            res.send({
+                "mal_id": mal_id
+            });
         });
     }
 };
@@ -145,7 +147,7 @@ var Anime = (function() {
         var airArr = $(".dark_text:contains('Aired:')").parent().text().substring(airDate.length + 1).split("to");
 
         var airJSDate = Date.parse(airArr[0]);
-        if(isNaN(airJSDate))
+        if (isNaN(airJSDate))
             airJSDate = null;
 
         anime.airDate = airJSDate;
