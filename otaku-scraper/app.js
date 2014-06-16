@@ -65,7 +65,10 @@
  apiRegister('/mal/news/', api.mal.news);
 
 // MAL listings for users
-apiRegister('/mal/list/:type/:user', api.mal.list);
+apiRegister('/mal/list/fetch/:type/:user', api.mal.list.fetch);
+apiRegister('/mal/list/add/:type/:user/:id', api.mal.list.add);
+apiRegister('/mal/list/remove/:type/:user/:id', api.mal.list.delete);
+apiRegister('/mal/list/update/:type/:user/:id', api.mal.list.update);
 
  /* AniChart Seasonal */
  apiRegister('/anichart', api.anichart.current);

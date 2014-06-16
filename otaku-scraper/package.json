@@ -22,6 +22,7 @@
     "monk": "*"
   },
   "devDependencies": {
+    "basic-auth": "0.0.1",
     "cors": "^2.3.1",
     "cron": "^1.0.4",
     "debug": "0.7.2",
