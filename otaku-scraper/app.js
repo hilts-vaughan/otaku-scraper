@@ -17,6 +17,7 @@
    News = require('./lib/api/mal/news'),
    reference = require('./lib/api/ref');
    CronTasks = require('./lib/cron/cron_tasks');
+   ContentList = require('./lib/api/mal/list_content')
 
  /* Setup expressjs */
  var app = express();
@@ -63,6 +64,9 @@
  /* MAL News */
  apiRegister('/mal/news/', api.mal.news);
 
+// MAL listings for users
+apiRegister('/mal/list/:type/:user', api.mal.list);
+
  /* AniChart Seasonal */
  apiRegister('/anichart', api.anichart.current);
  apiRegister('/anichart/current', api.anichart.current);
@@ -71,6 +75,8 @@
  apiRegister('/anichart/fall', api.anichart.fall);
  apiRegister('/anichart/winter', api.anichart.winter);
  apiRegister('/anichart/tba', api.anichart.tba);
+
+
 
  /* AniChart Yearly Archive */
  apiRegister('/anichart/spring/:id([0-9]+)', api.anichart.spring);
