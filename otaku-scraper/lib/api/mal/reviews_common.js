@@ -1,63 +1,23 @@
 var api = global.api
   , cheerio = require('cheerio')
   , request = require('request')
-  , Anime = require('../mal/anime.js')
-  , AnimeModel = require('../../db/animemodel')
-  , ReviewsModel = require('../../db/reviewsmodel')
   ;
 
-api.mal.anime.reviews = {
-	idAll: function(req, res, next) {
-		res.type('application/json');
-		var id = req.params.id;
+var CommonReviews = (function() {
+	function CommonReviews() {}
 
-		AnimeReviews.byId(id, function(err, reviews) {
-			if (err) {
-				return next(err);
-			}
+	CommonReviews.validateURL = function(url) {
+		url = url.trim();
 
-			res.send(reviews);
-		});
-	},
-	nameAll: function(req, res, next) {
-		res.type('application/json');
-		var name = req.params.name;
+		if (url.indexOf("http://myanimelist.net") < 0)
+			return "http://myanimelist.net" + (url.indexOf("/") == 0 ? "" : "/") + url;
 
-		AnimeReviews.byName(name, function(err, reviews) {
-			if (err) {
-				return next(err);
-			}
-
-			res.send(reviews);
-		});
-	}
-};
-
-
-var AnimeReviews = (function() {
-	function AnimeReviews() {}
-
-	AnimeReviews.byId = function(id, callback) {
-		var that = this;
-
-		ReviewsModel.findOne({
-			"mal_id": id
-		}, function(err, reviews) {
-			if (reviews == null) {
-				that._downloadReviews(id, function(reviewsObject) {
-					callback(null, reviewsObject);
-				});
-			} else {
-				callback(null, reviews);
-			}
-		});
+		return url;
 	};
 
-	AnimeReviews._downloadReviews = function(id, callback) {
-		var that = this;
-
+	CommonReviews._downloadReviews = function(id, callback, urlType, objectType, modelType) {
 		request({
-			url: 'http://myanimelist.net/anime/' + id,
+			url: 'http://myanimelist.net/' + urlType + '/' + id,
 			headers: {
 				'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
 			},
@@ -72,27 +32,28 @@ var AnimeReviews = (function() {
 			var reviewURL = $("#horiznav_nav").find('a:contains(Reviews)').first().attr('href');
 
 			request({
-				url: reviewURL,
+				url: CommonReviews.validateURL(reviewURL),
 				headers: {
 					'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
 				},
 				timeout: 3000
 			}, function(err, response, body) {
-				var reviewsList = that._tryParseReviews(body);
+				console.log("Common: " + CommonReviews.validateURL(reviewURL));
+				var reviewsList = CommonReviews._tryParseReviews(body);
 
-				Anime.byId(id, function(err, anime) {
+				objectType.byId(id, function(err, object) {
         			var now = new Date();
 					var reviewsObject = {
 						mal_id: id,
 						reviews: reviewsList,
 
-						// Set the expiry to 7 days; this is how often we evict anime entries from our cache
+						// Set the expiry to 7 days; this is how often we evict manga entries from our cache
 						expiry: now.setDate(now.getDate() + 7)
 					};
 
 					/* Insert the record iff it's not an invalid request */
-					if (anime['name'] != "Invalid Request") {
-						var reviewsModel = new ReviewsModel(reviewsObject);
+					if (object['name'] != "Invalid Request") {
+						var reviewsModel = new modelType(reviewsObject);
 						reviewsModel.save();
 					}
 
@@ -102,7 +63,7 @@ var AnimeReviews = (function() {
 		});
 	};
 
-	AnimeReviews._tryParseReviews = function(html) {
+	CommonReviews._tryParseReviews = function(html) {
         var $ = cheerio.load(html);
         var reviews = [];
 
@@ -143,7 +104,10 @@ var AnimeReviews = (function() {
     };
 
 	// export our class
-	return AnimeReviews;
+	return CommonReviews;
 })();
 
-module.exports = AnimeReviews;
+// Export the module
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = CommonReviews;
+}

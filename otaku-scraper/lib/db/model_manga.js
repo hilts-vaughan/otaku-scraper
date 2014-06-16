@@ -15,13 +15,16 @@ var mangaSchema = mongoose.Schema({
 	poster: String,
 	synopsis: String,
 	type: String,
-	status: String,
+	status: Number,
 	episodes: Number,
 	genres: [],
 	malstats: Object,
 	mal_id: Number
 });
 
-var MangaModel = mongoose.model('manga', mangaSchema);
+var MangaModel = mongoose.model('MangaModel', mangaSchema);
 
-module.exports = MangaModel;
+// Export the module
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MangaModel;
+}

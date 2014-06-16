@@ -1,8 +1,9 @@
-var api = global.api,
-    cheerio = require('cheerio'),
-    request = require('request'),
-    Anime = require('../mal/anime.js'),
-    ChartModel = require('../../db/chartmodel');
+var api = global.api
+  , cheerio = require('cheerio')
+  , request = require('request')
+  , Anime = require('../mal/anime.js')
+  , ChartModel = require('../../db/model_chart')
+  ;
 
 api.anichart = {
     current: function(req, res, next) {

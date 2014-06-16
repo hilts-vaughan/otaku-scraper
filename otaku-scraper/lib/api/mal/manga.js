@@ -1,26 +1,51 @@
-cheerio = require('cheerio');
-request = require('request');
-MangaModel = require('../../db/MangaModel');
+var cheerio = require('cheerio')
+  , request = require('request')
+  , MAL = require("./mal.js")
+  , MangaModel = require('../../db/model_manga')
+  ;
 
-var api = global.api
+var api = global.api;
+
 api.mal.manga = {
 	id: function(req, res, next) {
-		res.type('application/json');
+        res.type('application/json');
 
-		var id = req.params.id;
+        var id = req.params.id;
+        Manga.byId(id, function(err, manga) {
+            if (err) {
+                return next(err);
+            }
 
-		Manga.byId(id, function(err, manga) {
-			if (err) {
-				return next(err);
-			}
+            res.send(manga);
+        });
+    },
+    name: function(req, res, next) {
+        res.type('application/json');
 
-			res.send(manga);
-		});
-	}
+        var name = req.params.name;
+        MAL.contentByName(name, function(err, manga) {
+            if (err) {
+                return next(err);
+            }
+
+            res.send(manga);
+        }, Manga);
+    },
+    search: function(req, res, next) {
+        res.type('application/json');
+
+        var name = req.params.name;
+        Manga.lookup(name, function(err, mal_id) {
+            if (err) {
+                return next(err);
+            }
+
+            res.send({ "mal_id": mal_id });
+        });
+    }
 }
 
 var Manga = (function() {
-
 	function Manga() {}
 
 	/**
@@ -32,30 +57,30 @@ var Manga = (function() {
 	 * @param  {Function} callback - The callback to be executed with the manga model.
 	 */
 	Manga.byId = function(id, callback) {
-
-		var that = this;
+		id = Number(id);
 
 		// Attempt to find it in our DB and return it if we can immediately
 		MangaModel.findOne({
 			mal_id: id
-		}, function(err, manga) {
-			if (manga == null) {
+		}, function(error, results) {
+			if (results == null) {
+				console.log("Fetching manga from MAL DB with ID #" + id);
+
 				// download and return
-				that._downloadManga(id, function(mangaObject) {
+				MAL._contentDownload(id, function(object) {
 
 					// Persist to the DB if we need to
 					/* Insert the record iff it's not an invalid request */
-					if (mangaObject['name'] != "Invalid Request") {
-						var mangaModel = new MangaModel(mangaObject);
-						mangaModel.save();
+					if (object['name'] != "Invalid Request") {
+						var model = new MangaModel(object);
+						model.save();
 					}
 
-					callback(null, mangaObject);
-				});
+					callback(null, object);
+				}, 'manga', Manga);
 			} else {
-				callback(null, manga);
+				callback(null, results);
 			}
-
 		});
 
 	};
@@ -68,24 +93,24 @@ var Manga = (function() {
 	 * @param  {[Number]}   id - The ID of the manga to download
 	 * @param  {Function} callback - The callback to be executed
 	 */
-	Manga._downloadManga = function(id, callback) {
-
+	Manga._download = function(id, callback) {
 		var that = this;
+
 		request({
 			url: 'http://myanimelist.net/manga/' + id,
 			headers: {
 				'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
 			},
 			timeout: 3000
-		}, function(err, response, body) {
-			if (err) {
-				return callback(err);
+		}, function(error, response, body) {
+			if (error) {
+				return callback(error);
 			}
+			
+			var object = that._tryParse(body);
+			object['mal_id'] = id;
 
-			var mangaObject = that._tryParse(body);
-			mangaObject['mal_id'] = id;
-
-			callback(mangaObject);
+			callback(object);
 		});
 	};
 
@@ -117,7 +142,12 @@ var Manga = (function() {
 
 		var status = "Status:";
 		var textStatus = $(".dark_text:contains('Status:')").parent().text().substring(status.length + 1);
-		manga.status = textStatus;
+
+		manga.status = 0;
+        if (textStatus.toLowerCase().indexOf("finished") > -1)
+            manga.status = 2;
+        else if (textStatus.toLowerCase().indexOf("publishing") > -1)
+            manga.status = 1;
 
 		manga.genres = [];
 		var genres = "Genres:";
@@ -139,13 +169,62 @@ var Manga = (function() {
 			return this.type !== 'tag';
 		}).text().trim();
 
-
 		return manga;
 
 	};
+
+	Manga.lookup = function(name, callback, params) {
+        if (params === undefined)
+            params = "type=1";
+
+        var that = this;
+
+        request({
+            url: 'http://myanimelist.net/manga.php?' + params + '&q=' + encodeURIComponent(name.replace(/[\~\&\:\!\.\*]/g, "")),
+            headers: {
+                'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+            },
+            timeout: 10000
+        }, function(err, response, body) {
+            if (err) {
+                return callback(err);
+            }
+
+            var $ = cheerio.load(body.toLowerCase());
+            var isresults = $('.normal_header').text().indexOf("search results") != -1;
+            var mal_id = -1;
+
+            if (isresults) {
+                if (body.indexOf("No titles that matched your query were found.") == -1) {
+                    var atag = $("a:contains('" + name.toLowerCase() + "')");
+                    var href = atag.attr("href");
+                    var offset = "/manga/".length;
+                    mal_id = href;
+                    if (href !== undefined)
+                        mal_id = mal_id.substring(offset, href.indexOf("/", offset));
+                }
+            } else {
+                var doEdit = "javascript:doedit(";
+                var idxDoEdit = body.indexOf(doEdit) + doEdit.length;
+                mal_id = body.substring(idxDoEdit, body.indexOf(");", idxDoEdit));
+            }
+
+            mal_id = new Number(mal_id);
+            if (isNaN(mal_id))
+                mal_id = -2;
+
+            if (mal_id == -1 && params.length > 0)
+                Anime.lookup(name, callback, "");
+            else
+                callback(null, mal_id);
+        });
+    };
 
 	return Manga;
 
 })();
 
-module.exports = Manga;
+// Export the module
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Manga;
+}

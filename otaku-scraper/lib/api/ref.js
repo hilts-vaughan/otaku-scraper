@@ -104,6 +104,48 @@ api.ref.anime = {
 	}
 };
 
+api.ref.manga = {
+	typeCodes: {
+		TYPE_MANGA: 0,
+		TYPE_NOVEL: 1,
+		TYPE_ONESHOT: 2,
+		TYPE_DOUJIN: 3,
+		TYPE_MANHWA: 4,
+		TYPE_MANHUA: 5,
+		TYPE_OEL: 6,
+
+		0: "TYPE_MANGA",
+		1: "TYPE_NOVEL",
+		2: "TYPE_ONESHOT",
+		3: "TYPE_DOUJIN",
+		4: "TYPE_MANHWA",
+		5: "TYPE_MANHUA",
+		6: "TYPE_OEL",
+
+		"TYPE_MANGA": 0,
+		"TYPE_NOVEL": 1,
+		"TYPE_ONESHOT": 2,
+		"TYPE_DOUJIN": 3,
+		"TYPE_MANHWA": 4,
+		"TYPE_MANHUA": 5,
+		"TYPE_OEL": 6,
+
+		get: function(request, response, next) {
+			response.type('application/json');
+
+			var code = new Number(request.params.code);
+			if (isNaN(code))
+				code = -1;
+
+			var literal = api.ref.manga.typeCodes[code];
+			if (literal === undefined)
+				literal = "UNKNOWN";
+
+			response.send({ "literal": literal });
+		}
+	}
+};
+
 // Export the module
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = api.ref;

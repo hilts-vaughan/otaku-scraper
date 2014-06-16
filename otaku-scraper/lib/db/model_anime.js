@@ -24,4 +24,7 @@ var animeSchema = mongoose.Schema({
 
 var AnimeModel = mongoose.model('AnimeModel', animeSchema);
 
-module.exports = AnimeModel;
+// Export the module
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = AnimeModel;
+}

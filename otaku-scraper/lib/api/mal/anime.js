@@ -1,9 +1,11 @@
-// imports
-var cheerio = require('cheerio'),
-    request = require('request'),
-    AnimeModel = require('../../db/animemodel');
+var cheerio = require('cheerio')
+  , request = require('request')
+  , MAL = require("./mal.js")
+  , AnimeModel = require('../../db/model_anime')
+  ;
 
-var api = global.api
+var api = global.api;
+
 api.mal.anime = {
     id: function(req, res, next) {
         res.type('application/json');
@@ -21,13 +23,13 @@ api.mal.anime = {
         res.type('application/json');
 
         var name = req.params.name;
-        Anime.byName(name, function(err, anime) {
+        MAL.contentByName(name, function(err, anime) {
             if (err) {
                 return next(err);
             }
 
             res.send(anime);
-        });
+        }, Anime);
     },
     search: function(req, res, next) {
         res.type('application/json');
@@ -46,54 +48,52 @@ api.mal.anime = {
 var Anime = (function() {
     function Anime() {}
 
-    Anime.byName = function(name, callback) {
-        Anime.lookup(name, function(err, mal_id) {
-            if (err) {
-                return callback(err);
-            }
+    Anime.byId = function(id, callback) {
+        id = Number(id);
 
-            Anime.byId(mal_id, callback);
+        AnimeModel.findOne({
+            mal_id: id
+        }, function(error, results) {
+            // If we couldn't find the thing we wanted, we'll simply go fetch it
+            if (results == null) {
+                console.log("Fetching anime from MAL DB with ID #" + id);
+
+                // download and return
+                MAL._contentDownload(id, function(object) {
+
+                    // Persist to the DB if we need to
+                    /* Insert the record iff it's not an invalid request */
+                    if (object['name'] != "Invalid Request") {
+                        var model = new AnimeModel(object);
+                        model.save();
+                    }
+
+                    callback(null, object);
+                }, 'anime', Anime);
+            } else {
+                callback(null, results);
+            }
         });
     };
 
-    Anime.byId = function(id, callback) {
+    Anime._download = function(id, callback) {
         var that = this;
-        AnimeModel.find({
-            mal_id: id
-        }, function(err, anime) {
-            // If we couldn't find the thing we wanted, we'll simply go fetch it
-            if (anime == null || anime.length == 0) {
-                console.log("Fetching anime from MAL DB with ID #" + id);
 
-                request({
-                    url: 'http://myanimelist.net/anime/' + id,
-                    headers: {
-                        'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
-                    },
-                    timeout: 3000
-                }, function(err, response, body) {
-                    console.log(id);
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    var animeObject = that.tryParse(body);
-                    animeObject['mal_id'] = id;
-
-                    /* Insert the record iff it's not an invalid request */
-                    if (animeObject['name'] != "Invalid Request") {
-                        var animeModel = new AnimeModel(animeObject);
-                        animeModel.save();
-                    }
-
-                    callback(null, animeObject);
-                });
-            } else {
-                if (anime.length === undefined)
-                    callback(null, anime);
-                else
-                    callback(null, anime[0]);
+        request({
+            url: 'http://myanimelist.net/anime/' + id,
+            headers: {
+                'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
+            },
+            timeout: 3000
+        }, function(error, response, body) {
+            if (error) {
+                return callback(error);
             }
+            
+            var object = that._tryParse(body);
+            object['mal_id'] = id;
+
+            callback(object);
         });
     };
 
@@ -101,7 +101,7 @@ var Anime = (function() {
       This method is really fragile; it's subject to page layout changes.
       We should do our best to keep up with breakages
     */
-    Anime.tryParse = function(html) {
+    Anime._tryParse = function(html) {
         var $ = cheerio.load(html);
         var anime = {};
 
