@@ -1,7 +1,7 @@
 var request = require('request');
 var qs = require('querystring');
 var api = global.api;
-
+parseString = require('xml2js').parseString;
 
 api.mal.list = function(req, res, next) {
 	res.type('application/json');
@@ -26,7 +26,14 @@ var ContentList = (function() {
 			},
 			function(error, response, body) {
 				if (!error && response.statusCode == 200) {
-					callback(null, body);
+
+					parseString(body, function(err, result) {
+						var items = result;
+
+						callback(null, items);
+					});
+
+
 				} else {
 					callback(error, null);
 				}
