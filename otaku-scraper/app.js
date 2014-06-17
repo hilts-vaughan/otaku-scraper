@@ -18,6 +18,7 @@
    reference = require('./lib/api/ref');
    CronTasks = require('./lib/cron/cron_tasks');
    ContentList = require('./lib/api/mal/list_content')
+   MALAccount = require('./lib/api/mal/user');
 
  /* Setup expressjs */
  var app = express();
@@ -63,6 +64,8 @@
 
  /* MAL News */
  apiRegister('/mal/news/', api.mal.news);
+
+ apiRegister('/mal/user/', api.mal.user);
 
 // MAL listings for users
 apiRegister('/mal/list/fetch/:type/:user', api.mal.list.fetch);
