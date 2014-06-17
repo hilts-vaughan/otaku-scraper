@@ -19,6 +19,7 @@
    CronTasks = require('./lib/cron/cron_tasks');
    ContentList = require('./lib/api/mal/list_content')
    MALAccount = require('./lib/api/mal/user');
+   MALSearch = require('./lib/api/mal/search');
 
  /* Setup expressjs */
  var app = express();
@@ -66,6 +67,8 @@
  apiRegister('/mal/news/', api.mal.news);
 
  apiRegister('/mal/user/', api.mal.user);
+
+ apiRegister('/mal/search/:type', api.mal.search);
 
 // MAL listings for users
 apiRegister('/mal/list/fetch/:type/:user', api.mal.list.fetch);
