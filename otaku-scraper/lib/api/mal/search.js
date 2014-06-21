@@ -32,7 +32,7 @@ var MALSearch = (function() {
 		var header = new Buffer(u + ":" + p).toString('base64');
 
 		request({
-				url: 'http://myanimelist.net/api/anime/search.xml?q=' + q,
+				url: 'http://myanimelist.net/api/' + type + '/search.xml?q=' + q,
 				headers: {
 					'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0',
 					'Authorization': 'Basic ' + header
