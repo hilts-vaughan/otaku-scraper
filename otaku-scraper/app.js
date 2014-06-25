@@ -1,25 +1,26 @@
  global.api = {
-   ref: {},
-   anichart: {},
-   ann: {},
-   mal: {},
+    ref: {},
+    anichart: {},
+    ann: {},
+    mal: {},
  };
 
  var api = global.api,
-   express = require('express'),
-   config = require('./config'),
-   notfound = require('./lib/notfound'),
-   Anime = require('./lib/api/mal/anime'),
-   Manga = require('./lib/api/mal/manga'),
-   AnimeReviews = require('./lib/api/mal/reviews_anime'),
-   MangaReviews = require('./lib/api/mal/reviews_manga'),
-   AniChart = require('./lib/api/anichart/anichart'),
-   News = require('./lib/api/mal/news'),
-   reference = require('./lib/api/ref');
-   CronTasks = require('./lib/cron/cron_tasks');
-   ContentList = require('./lib/api/mal/list_content')
-   MALAccount = require('./lib/api/mal/user');
-   MALSearch = require('./lib/api/mal/search');
+    express = require('express'),
+    config = require('./config'),
+    notfound = require('./lib/notfound'),
+    Anime = require('./lib/api/mal/anime'),
+    Manga = require('./lib/api/mal/manga'),
+    AnimeReviews = require('./lib/api/mal/reviews_anime'),
+    MangaReviews = require('./lib/api/mal/reviews_manga'),
+    AniChart = require('./lib/api/anichart/anichart'),
+    News = require('./lib/api/mal/news'),
+    reference = require('./lib/api/ref');
+ CronTasks = require('./lib/cron/cron_tasks');
+ ContentList = require('./lib/api/mal/list_content')
+ MALAccount = require('./lib/api/mal/user');
+ MALSearch = require('./lib/api/mal/search');
+ MALChart = require('./lib/api/mal/chart')
 
  /* Setup expressjs */
  var app = express();
@@ -34,10 +35,10 @@
 
  /* Make our db accessible to our router */
  app.use(function(request, response, next) {
-   // Patch the requests incoming
-   request.db = db;
+    // Patch the requests incoming
+    request.db = db;
 
-   next();
+    next();
  });
 
 
@@ -70,11 +71,13 @@
 
  apiRegister('/mal/search/:type', api.mal.search);
 
-// MAL listings for users
-apiRegister('/mal/list/fetch/:type/:user', api.mal.list.fetch);
-apiRegister('/mal/list/add/:type/:user/:id', api.mal.list.add);
-apiRegister('/mal/list/remove/:type/:user/:id', api.mal.list.delete);
-apiRegister('/mal/list/update/:type/:user/:id', api.mal.list.update);
+ apiRegister('/mal/chart/anime/:start', api.mal.chart.anime)
+
+ // MAL listings for users
+ apiRegister('/mal/list/fetch/:type/:user', api.mal.list.fetch);
+ apiRegister('/mal/list/add/:type/:user/:id', api.mal.list.add);
+ apiRegister('/mal/list/remove/:type/:user/:id', api.mal.list.delete);
+ apiRegister('/mal/list/update/:type/:user/:id', api.mal.list.update);
 
  /* AniChart Seasonal */
  apiRegister('/anichart', api.anichart.current);
@@ -103,7 +106,7 @@ apiRegister('/mal/list/update/:type/:user/:id', api.mal.list.update);
 
  /* Listen on our port */
  app.listen(config.get('port'), function() {
-   console.log('API server listening on port ' + config.get('port'));
+    console.log('API server listening on port ' + config.get('port'));
  });
 
  /* Load up our database */
@@ -113,30 +116,30 @@ apiRegister('/mal/list/update/:type/:user/:id', api.mal.list.update);
 
  var db = mongoose.connection;
  db.on('error', function(err) {
-   console.log(err + " while attempting to open the database. Exiting.");
-   process.exit(1);
+    console.log(err + " while attempting to open the database. Exiting.");
+    process.exit(1);
  });
 
  db.once('open', function callback() {
-   console.log("Registering API routes...")
+    console.log("Registering API routes...")
  });
 
  /* API Registration "macro" */
  function apiRegister(url, func, version) {
-   if (isNaN(version))
-     version = 1;
+    if (isNaN(version))
+       version = 1;
 
-   app.get(url, func);
-   console.log(url);
-   app.get('/v' + version + url, func);
+    app.get(url, func);
+    console.log(url);
+    app.get('/v' + version + url, func);
  }
 
 
  // Setup cron
-CronTasks.setupTasks();
+ CronTasks.setupTasks();
 
 
  // Export the module
  if (typeof module !== 'undefined' && module.exports) {
-   module.exports = app;
+    module.exports = app;
  }
