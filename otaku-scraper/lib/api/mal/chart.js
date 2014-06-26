@@ -19,6 +19,17 @@ api.mal.chart = {
     },
 
 
+    animePop: function(req, res, next) {
+        res.type('application/json');
+
+        var start = req.params.start;
+
+        MALChart.getChartAnime(start, 'bypopularity', function(data) {
+            res.send(data);
+        });
+    },
+
+
     manga: function(req, res, next) {
         res.type('application/json');
 
@@ -27,7 +38,17 @@ api.mal.chart = {
         MALChart.getChartManga(start, '', function(data) {
             res.send(data);
         });
-    }    
+    },
+
+    mangaPop: function(req, res, next) {
+        res.type('application/json');
+
+        var start = req.params.start;
+
+        MALChart.getChartManga(start, 'bypopularity', function(data) {
+            res.send(data);
+        });
+    }
 
 
 
