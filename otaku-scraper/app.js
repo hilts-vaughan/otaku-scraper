@@ -28,6 +28,8 @@
  app.use(express.responseTime());
  app.use(express.favicon());
  app.use(express.json());
+app.use(express.bodyParser());
+
 
  /* Allow cross origin requests */
  var cors = require('cors');
@@ -36,7 +38,6 @@
  /* Make our db accessible to our router */
  app.use(function(request, response, next) {
     // Patch the requests incoming
-    request.db = db;
 
     next();
  });
@@ -79,8 +80,8 @@
  // MAL listings for users
  apiRegister('/mal/list/fetch/:type/:user', api.mal.list.fetch);
  apiRegister('/mal/list/add/:type/:user/:id', api.mal.list.add);
- apiRegister('/mal/list/remove/:type/:user/:id', api.mal.list.delete);
- apiRegister('/mal/list/update/:type/:user/:id', api.mal.list.update);
+ apiRegister('/mal/list/delete/:type/:user/:id', api.mal.list.delete);
+ apiRegisterPost('/mal/list/update/:type/:user/:id', api.mal.list.update);
 
  /* AniChart Seasonal */
  apiRegister('/anichart', api.anichart.current);
@@ -137,6 +138,15 @@
     app.get('/v' + version + url, func);
  }
 
+
+ function apiRegisterPost(url, func, version) {
+    if (isNaN(version))
+       version = 1;
+
+    app.post(url, func);
+    console.log(url);
+    app.post('/v' + version + url, func);
+ }
 
  // Setup cron
  CronTasks.setupTasks();
