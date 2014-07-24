@@ -198,13 +198,18 @@ var ContentList = (function() {
 		//'Authorization': 'Basic ' + header
 		var url = "http://myanimelist.net/api/{}list/update/[id].xml".replace("{}", type).replace("[id]", id);
 		console.log(url);
-		console.log(n);
+		
 
+		delete n['title']
+		delete n['poster']
+
+		console.log(n);
+		
 
 
 		var xmlDoc = "";
 		xmlDoc = js2xmlparser("entry", n);
-
+console.log(xmlDoc)
 
 		request.post(
 			url, {
@@ -226,7 +231,8 @@ var ContentList = (function() {
 					callback("OK");
 				} else {
 					callback(error + " " + response.statusCode);
-					console.log(body);					
+					console.log(body);
+					console.log(error);				
 				}
 			}
 		);

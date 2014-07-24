@@ -1,0 +1,2 @@
+# otaku
+### a Sails application

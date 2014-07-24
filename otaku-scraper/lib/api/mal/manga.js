@@ -113,6 +113,9 @@ var Manga = (function() {
 		var type = "Type:";
 		manga.type = $(".dark_text:contains('Type:')").parent().text().substring(type.length + 1);
 
+		var chapters = "Chapters:";
+		manga.chapters =  parseInt($(".dark_text:contains('Chapters:')").parent().text().substring(chapters.length + 1)) || -1;
+
 		var status = "Status:";
 		var textStatus = $(".dark_text:contains('Status:')").parent().text().substring(status.length + 1);
 

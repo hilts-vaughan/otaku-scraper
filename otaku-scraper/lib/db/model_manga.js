@@ -20,7 +20,8 @@ var mangaSchema = mongoose.Schema({
 	genres: [],
 	malstats: Object,
 	mal_id: Number,
-	publishDate: Date
+	publishDate: Date,
+	chapters: Number
 });
 
 var MangaModel = mongoose.model('MangaModel', mangaSchema);
