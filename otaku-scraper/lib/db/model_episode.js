@@ -1,17 +1,17 @@
 var mongoose = require('mongoose')
-  , schemaTranslationPair = require('schema_translationpair')
+  , schemaTranslation = require('schema_translation')
   ;
 
 var schemaEpisode = mongoose.Schema({
 	id: Number,
 	anime_id: Number,
 	episode_num: Number,
-	titles: [schemaTranslationPair],
+	titles: {},
 	air_date: Date,
 	notes: String
 }, { collection: 'episode' });
 
-var ModelEpisode = mongoose.model('ModelEpisode', schemaTableAnime);
+var ModelEpisode = mongoose.model('ModelEpisode', schemaEpisode);
 
 /* Module Export */
 if (typeof module !== 'undefined' && module.exports) {

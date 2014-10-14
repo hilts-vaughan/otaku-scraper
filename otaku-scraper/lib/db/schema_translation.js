@@ -1,7 +1,7 @@
 var mongoose = require('mongoose')
   ;
 
-var schemaTranslation = mongoose.schema({
+var schemaTranslation = mongoose.Schema({
 	language: String,
 	translations: [String]
 });
