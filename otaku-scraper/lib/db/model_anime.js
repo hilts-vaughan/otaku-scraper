@@ -1,31 +1,33 @@
-/*
-	Defines our schema and interactive model for anime titles
-	This is a mongoose defined model.
-*/
-mongoose = require('mongoose');
+var mongoose = require('mongoose')
+  , schemaTranslationPair = require('schema_translationpair')
+  ;
 
-var animeSchema = mongoose.Schema({
-	name: String,
-	expiry: Date,
-	titles: {
-		english: [],
-		synonyms: [],
-		japanese: []
-	},
-	poster: String,
-	synopsis: String,
-	type: String,
+var schemaAnime = mongoose.Schema({
+	id: Number,
+	titles: [schemaTranslationPair],
+	type: Number,
+	episodes_released: Number,
+	episodes_total: Number,
 	status: Number,
-	episodes: Number,
-	genres: [],
-	malstats: Object,
-	mal_id: Number,
-	airDate: Date
-});
+	airing_start: Date,
+	airing_end: Date,
+	producers: [String],
+	genres: [int],
+	episode_duration: Number,
+	content_rating: Number,
+	synopsis: String,
+	adapted_type: Number,
+	adapted_from: Number,
+	anime_related: [int],
+	anime_sidestory: [int],
+	anime_spinoff: [int],
+	parent_type: Number,
+	parent_id: Number
+}, { collection: 'anime' });
 
-var AnimeModel = mongoose.model('AnimeModel', animeSchema);
+var ModelAnime = mongoose.model('ModelAnime', schemaTableAnime);
 
-// Export the module
+/* Module Export */
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AnimeModel;
+	module.exports = ModelAnime;
 }
