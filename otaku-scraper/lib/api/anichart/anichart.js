@@ -79,6 +79,7 @@ var AniChart = (function() {
             var returns = 0;
             var callbacks = [];
 
+            console.log("chart length: " + chart.info.length);
             for (var i = 0; i < chart.info.length; i++) {
                 callbacks[i] = (function(index) {
                     return function(err, mal_id) {
@@ -178,8 +179,9 @@ var AniChart = (function() {
 
         chart.info = [];
         var itrInfo = $(".anime_info,.anime_info_sml");
-        console.log("iterating");
+        console.log("iterating: " + itrInfo.length);
         while (itrInfo.length > 0) {
+            console.log(itrInfo.length);
             var contents = itrInfo.first().contents();
             var tabinfo = contents.filter(".tabs").contents().filter(".tab_info").contents();
             var info = {};

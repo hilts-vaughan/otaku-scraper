@@ -183,8 +183,9 @@ var Anime = (function() {
 
         var that = this;
 
+        console.log("url: " + 'http://myanimelist.net/anime.php?' + params + '&q=' + encodeURIComponent(name.replace(/[\~\&\:\!\.\*]/g, "")).replace(/%2B/g, "+"));
         request({
-            url: 'http://myanimelist.net/anime.php?' + params + '&q=' + encodeURIComponent(name.replace(/[\~\&\:\!\.\*]/g, "")),
+            url: 'http://myanimelist.net/anime.php?' + params + '&q=' + encodeURIComponent(name.replace(/[\~\&\:\!\.\*]/g, "")).replace(/%2B/g, "+"),
             headers: {
                 'User-Agent': 'api-team-692e8861471e4de2fd84f6d91d1175c0'
             },
@@ -200,11 +201,12 @@ var Anime = (function() {
 
             if (isresults) {
                 if (body.indexOf("No titles that matched your query were found.") == -1) {
-                    var atag = $("a:contains('" + name.toLowerCase() + "')");
+                    var cleanName = decodeURIComponent(name.replace(/_/g, " ")).replace(/\+/g, " ");
+                    var atag = $("a:contains('" + cleanName + "')");
                     atag.each(function(index, element) {
                         var selector = $(element);
 
-                        if (selector.text().trim() == name.toLowerCase().trim()) {
+                        if (selector.text().trim() == cleanName.toLowerCase().trim()) {
                             atag = selector;
                         }
                     });
@@ -221,6 +223,7 @@ var Anime = (function() {
                 mal_id = body.substring(idxDoEdit, body.indexOf(");", idxDoEdit));
             }
 
+            console.log("the malid: " + mal_id);
             mal_id = new Number(mal_id);
             if (isNaN(mal_id))
                 mal_id = -2;

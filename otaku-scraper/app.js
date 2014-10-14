@@ -72,10 +72,10 @@ app.use(express.bodyParser());
 
  apiRegister('/mal/search/:type', api.mal.search);
 
- apiRegister('/mal/chart/anime/:start', api.mal.chart.anime)
-  apiRegister('/mal/chart/animePop/:start', api.mal.chart.animePop)
-   apiRegister('/mal/chart/manga/:start', api.mal.chart.manga)
-    apiRegister('/mal/chart/mangaPop/:start', api.mal.chart.mangaPop)
+apiRegister('/mal/chart/anime/:start', api.mal.chart.anime)
+apiRegister('/mal/chart/animePop/:start', api.mal.chart.animePop)
+apiRegister('/mal/chart/manga/:start', api.mal.chart.manga)
+apiRegister('/mal/chart/mangaPop/:start', api.mal.chart.mangaPop)
 
  // MAL listings for users
  apiRegister('/mal/list/fetch/:type/:user', api.mal.list.fetch);
