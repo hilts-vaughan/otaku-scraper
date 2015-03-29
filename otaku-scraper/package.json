@@ -22,6 +22,7 @@
     "monk": "*"
   },
   "devDependencies": {
+    "nodemon": "~1.2.1",
     "basic-auth": "0.0.1",
     "cors": "^2.3.1",
     "cron": "^1.0.4",
@@ -39,7 +40,7 @@
     "xml2js": "^0.4.4"
   },
   "scripts": {
-    "start": "node --harmony-generators app.js",
+    "start": "nodemon --exec node app.js --ext js,json",
     "test": "make test",
     "test-watch": "make test-watch"
   },

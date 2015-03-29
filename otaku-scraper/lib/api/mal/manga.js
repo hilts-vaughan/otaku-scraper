@@ -103,7 +103,7 @@ var Manga = (function() {
 
 		// Set the expiry to 7 days; this is how often we evict anime entries from our cache
 		var now = new Date();
-		manga.expiry = now.setDate(now.getDate() + 7);
+		manga.expiry = now.setDate(now.getDate() + 999);
 
 		manga.poster = $('.borderClass img').attr('src');
 

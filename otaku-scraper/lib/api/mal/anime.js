@@ -62,7 +62,7 @@ var Anime = (function() {
 
                 // download and return
                 MAL.contentDownload(id, function(object) {
-
+                    console.log("Storing record with ID #" + id + ".");
                     // Persist to the DB if we need to
                     /* Insert the record iff it's not an invalid request */
                     if (object['name'] != "Invalid Request") {
@@ -95,7 +95,7 @@ var Anime = (function() {
 
         // Set the expiry to 7 days; this is how often we evict anime entries from our cache
         var now = new Date();
-        anime.expiry = now.setDate(now.getDate() + 7);
+        anime.expiry = now.setDate(now.getDate() + 999);
 
         // Grab Alternative Titles (English, Synonyms, Japanese)
         anime.titles = {};
